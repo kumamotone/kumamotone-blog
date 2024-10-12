@@ -15,7 +15,7 @@ import NextLink from 'next/link'
 import { useRouter } from 'next/navigation'
 import { EditorView } from 'prosemirror-view'
 import React, { useCallback, useEffect, useState } from 'react'
-import { FiEdit, FiList, FiSave, FiSend } from 'react-icons/fi'
+import { FiEdit, FiList, FiSave, FiSend, FiHelpCircle } from 'react-icons/fi'
 
 const CustomLink = Link.extend({
   inclusive: false,
@@ -166,6 +166,7 @@ export default function PostEditor({ initialTitle = '', initialContent = '', pos
   const [isSaving, setIsSaving] = useState(false);
   const [lastSavedAt, setLastSavedAt] = useState<Date | null>(null);
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+  const [showHelp, setShowHelp] = useState(false);
   const router = useRouter();
 
   // debounceされた自動保存関数を更新
@@ -481,6 +482,34 @@ export default function PostEditor({ initialTitle = '', initialContent = '', pos
       `}</style>
       <div className="fixed bottom-4 right-4 bg-gray-800 text-white px-3 py-1 rounded-full shadow-lg">
         {getWordCount()} 文字
+      </div>
+      <div className="fixed bottom-4 left-4">
+        <button
+          onClick={() => setShowHelp(!showHelp)}
+          className="bg-gray-800 text-white p-2 rounded-full shadow-lg hover:bg-gray-700 transition-colors duration-200"
+        >
+          <FiHelpCircle size={24} />
+        </button>
+        {showHelp && (
+          <div className="absolute bottom-12 left-0 bg-white border border-gray-300 rounded-lg shadow-xl p-4 w-64">
+            <h3 className="font-bold mb-2">エディタの機能一覧</h3>
+            <ul className="text-sm">
+              <li>• # で見出し (H1〜H6)</li>
+              <li>• --- で水平線</li>
+              <li>• > で引用</li>
+              <li>• * または - でリスト</li>
+              <li>• 1. で番号付きリスト</li>
+              <li>• `コード` でインラインコード</li>
+              <li>• ```言語名 でコードブロック</li>
+              <li>• [リンク](URL) でリンク</li>
+              <li>• ![代替テキスト](画像URL) で画像</li>
+              <li>• **太字** または __太字__</li>
+              <li>• *斜体* または _斜体_</li>
+              <li>• ~~打ち消し線~~</li>
+              <li>• #ハッシュタグ でタグ</li>
+            </ul>
+          </div>
+        )}
       </div>
     </div>
   );
