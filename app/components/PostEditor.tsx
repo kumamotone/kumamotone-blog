@@ -159,10 +159,11 @@ export default function PostEditor({ initialTitle = '', initialContent = '', pos
   useEffect(() => {
     async function loadDraft() {
       if (user && !postId) {
-        const draft = await getDraft(user.id);
-        if (draft) {
-          setTitle(draft.title);
-          editor?.commands.setContent(draft.content);
+        const drafts = await getDraft(user.id);
+        if (drafts.length > 0) {
+          const latestDraft = drafts[0]; // 最新のドラフトを使用
+          setTitle(latestDraft.title);
+          editor?.commands.setContent(latestDraft.content);
         }
       }
     }
@@ -170,14 +171,16 @@ export default function PostEditor({ initialTitle = '', initialContent = '', pos
   }, [user, postId, editor]);
 
   const handleSaveDraft = async () => {
-    if (user) {
+    if (user && editor) {
       try {
         await saveDraft({
           user_id: user.id,
-          title: editor.getText(),
+          title: title, // titleステートを使用
           content: editor.getHTML(),
+          created_at: new Date().toISOString(), // created_atフィールドを追加
         });
-        // ドラフト保存後の処理
+        // ドラフト保存後のフィードバックを追加（オプション）
+        alert('ドラフトが保存されました。');
       } catch (error) {
         console.error('Error saving draft:', error);
       }

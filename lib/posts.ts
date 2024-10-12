@@ -101,7 +101,7 @@ export async function saveDraft(draft: Omit<Draft, 'date'>): Promise<Draft | nul
       ...draft, 
       date: new Date().toISOString(),
       user_id: (await supabase.auth.getUser()).data.user?.id
-    })
+    }, { onConflict: 'user_id' }) // onConflict オプションを追加
     .select()
     .single()
 
@@ -113,19 +113,19 @@ export async function saveDraft(draft: Omit<Draft, 'date'>): Promise<Draft | nul
   return data
 }
 
-export async function getDraft(user_id: string): Promise<Draft | null> {
+export async function getDraft(user_id: string): Promise<Draft[]> {
   const { data, error } = await supabase
     .from('drafts')
     .select('*')
     .eq('user_id', user_id)
-    .single()
+    .order('created_at', { ascending: false });
 
   if (error) {
-    console.error('Error fetching draft:', error)
-    return null
+    console.error('Error fetching drafts:', error);
+    return [];
   }
 
-  return data
+  return data || [];
 }
 
 export async function deleteDraft(user_id: string): Promise<boolean> {

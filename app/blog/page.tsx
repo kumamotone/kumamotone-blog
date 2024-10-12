@@ -6,32 +6,28 @@ import { useEffect, useState } from "react"
 import DOMPurify from 'dompurify'
 import hljs from 'highlight.js'
 import 'highlight.js/styles/github-dark.css' // または他のスタイル
+import { getCurrentUser } from "@/lib/supabase"
 
 export default function BlogList() {
   const [posts, setPosts] = useState<Post[]>([])
   const [drafts, setDrafts] = useState<Draft[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const user = /* ユーザー情報の取得ロジック */;
+  const [user, setUser] = useState<User | null>(null);
 
   useEffect(() => {
-    async function loadPosts() {
-      const allPosts = await getAllPosts()
-      setPosts(allPosts)
-    }
-    loadPosts()
-  }, [])
-
-  useEffect(() => {
-    async function loadDrafts() {
-      if (user) {
-        const fetchedDrafts = await getAllDrafts(user.id);
+    async function loadData() {
+      const currentUser = await getCurrentUser();
+      setUser(currentUser);
+      const allPosts = await getAllPosts();
+      setPosts(allPosts);
+      if (currentUser) {
+        const fetchedDrafts = await getAllDrafts(currentUser.id);
         setDrafts(fetchedDrafts);
       }
       setIsLoading(false);
     }
-
-    loadDrafts();
-  }, [user]);
+    loadData();
+  }, []);
 
   useEffect(() => {
     if (posts.length > 0) {

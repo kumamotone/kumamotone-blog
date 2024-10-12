@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { getCurrentUser } from '@/lib/supabase';
 import PostEditor from '@/app/components/PostEditor';
 import { createPost } from '@/lib/posts'
+import Link from 'next/link';
 
 export default function NewPost() {
   const [user, setUser] = useState(null);
@@ -34,10 +35,19 @@ export default function NewPost() {
   const handleSubmit = async (title: string, content: string) => {
     const post = await createPost({ title, content });
     if (post) {
-      // 投稿作成後のリダイレクトなどの処理
-      router.push(`/blog/${post.id}`);
+      router.push('/');
     }
   };
 
-  return <PostEditor user={user} onSubmit={handleSubmit} />;
+  return (
+    <div className="container mx-auto px-4 py-8">
+      <div className="flex justify-between items-center mb-6">
+        <h1 className="text-3xl font-bold">新しい記事を作成</h1>
+        <Link href="/drafts" className="text-blue-500 hover:underline">
+          下書き一覧
+        </Link>
+      </div>
+      <PostEditor user={user} onSubmit={handleSubmit} />
+    </div>
+  );
 }
