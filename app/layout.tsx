@@ -1,6 +1,5 @@
 import type { Metadata } from 'next'
 import { Inter } from 'next/font/google'
-import 'prismjs/themes/prism-tomorrow.css'
 import './globals.css'
 import Link from 'next/link'
 

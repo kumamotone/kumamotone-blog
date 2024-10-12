@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.45.4",
+    "@tailwindcss/typography": "^0.5.15",
     "@tiptap/extension-code-block": "^2.8.0",
     "@tiptap/extension-heading": "^2.8.0",
     "@tiptap/extension-image": "^2.8.0",
