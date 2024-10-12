@@ -384,7 +384,7 @@ export default function PostEditor({ initialTitle = '', initialContent = '', pos
         <div>
           <label htmlFor="content" className="block mb-2">内容</label>
           <div className="border border-gray-300 rounded p-2 min-h-[300px]">
-            <EditorContent editor={editor} />
+            <EditorContent editor={editor} className="prose-headings:font-bold prose-h1:text-2xl prose-h2:text-xl prose-h3:text-lg prose-h4:text-base prose-h5:text-sm prose-h6:text-xs" />
           </div>
         </div>
         <div className="flex justify-between items-center mt-4">
