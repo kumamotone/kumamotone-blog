@@ -1,13 +1,43 @@
-import Link from "next/link";
-import { getAllPosts } from "@/lib/posts";
+'use client'
 
-export default async function BlogList() {
-  const blogPosts = await getAllPosts();
-  console.log('Fetched blog posts:', blogPosts); // デバッグログを追加
+import { useState, useEffect } from "react";
+import Link from "next/link";
+import { useRouter } from 'next/navigation';
+import { getAllPosts } from "@/lib/posts";
+import { getCurrentUser } from "@/lib/supabase";
+
+export default function BlogList() {
+  const [user, setUser] = useState(null);
+  const [blogPosts, setBlogPosts] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const router = useRouter();
+
+  useEffect(() => {
+    async function loadData() {
+      const currentUser = await getCurrentUser();
+      if (!currentUser) {
+        console.log('User not authenticated, redirecting to login');
+        router.push('/login');
+        return;
+      }
+      setUser(currentUser);
+
+      const posts = await getAllPosts();
+      setBlogPosts(posts);
+      setIsLoading(false);
+    }
+
+    loadData();
+  }, [router]);
+
+  if (isLoading) {
+    return <div>Loading...</div>;
+  }
 
   return (
     <div className="container mx-auto px-4 py-8">
       <h1 className="text-3xl font-bold mb-6">ブログ記事一覧</h1>
+      {user && <p>ようこそ、{user.email}さん！</p>}
       <Link href="/blog/new" className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 mb-4 inline-block">
         新しい記事を作成
       </Link>

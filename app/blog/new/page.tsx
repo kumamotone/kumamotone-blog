@@ -3,23 +3,34 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { createPost } from '@/lib/posts';
-import { signInAnonymously } from '@/lib/supabase';
+import { getCurrentUser } from '@/lib/supabase';
 
 export default function NewPost() {
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
+  const [error, setError] = useState('');
   const router = useRouter();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    await signInAnonymously(); // 匿名認証を行う
-    await createPost({ title, content });
-    router.push('/blog');
+    setError('');
+    const user = await getCurrentUser();
+    if (!user) {
+      setError('ログインが必要です。');
+      return;
+    }
+    const result = await createPost({ title, content });
+    if (result) {
+      router.push('/blog');
+    } else {
+      setError('記事の作成に失敗しました。');
+    }
   };
 
   return (
     <div className="container mx-auto px-4 py-8">
       <h1 className="text-3xl font-bold mb-6">新しい記事を作成</h1>
+      {error && <p className="text-red-500 mb-4">{error}</p>}
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
           <label htmlFor="title" className="block mb-2">タイトル</label>
