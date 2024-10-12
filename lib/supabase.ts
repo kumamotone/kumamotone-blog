@@ -57,3 +57,21 @@ export async function getCurrentUser() {
   }
   return data.session?.user || null
 }
+
+// 管理者ユーザーかどうかを確認する関数
+export async function isAdminUser(user: User | null): Promise<boolean> {
+  if (!user) return false;
+  
+  const { data, error } = await supabase
+    .from('users')
+    .select('is_admin')
+    .eq('id', user.id)
+    .single();
+
+  if (error) {
+    console.error('Error checking admin status:', error);
+    return false;
+  }
+
+  return data?.is_admin || false;
+}

@@ -4,12 +4,13 @@ import { useState, useEffect } from 'react';
 import Link from "next/link";
 import { useRouter } from 'next/navigation';
 import { getPostById, deletePost, Post } from "@/lib/posts";
-import { getCurrentUser } from "@/lib/supabase";
+import { getCurrentUser, isAdminUser } from "@/lib/supabase";
 import { User } from "@supabase/supabase-js";
 
 export default function BlogPost({ params }: { params: { id: string } }) {
   const [post, setPost] = useState<Post | null>(null);
   const [user, setUser] = useState<User | null>(null);
+  const [isAdmin, setIsAdmin] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [isDeleting, setIsDeleting] = useState(false);
   const [showModal, setShowModal] = useState(false);
@@ -25,6 +26,10 @@ export default function BlogPost({ params }: { params: { id: string } }) {
         ]);
         setPost(loadedPost);
         setUser(currentUser);
+        if (currentUser) {
+          const adminStatus = await isAdminUser(currentUser);
+          setIsAdmin(adminStatus);
+        }
       } catch (error) {
         console.error('Error loading data:', error);
       } finally {
@@ -45,6 +50,13 @@ export default function BlogPost({ params }: { params: { id: string } }) {
     }
   };
 
+  const handleTweet = () => {
+    if (!post) return;
+    const tweetText = encodeURIComponent(`${post.title} | My Blog`);
+    const tweetUrl = encodeURIComponent(`${window.location.origin}/blog/${id}`);
+    window.open(`https://twitter.com/intent/tweet?text=${tweetText}&url=${tweetUrl}`, '_blank');
+  };
+
   if (isLoading) return <div className="flex justify-center items-center h-screen">読み込み中...</div>;
   if (!post) return <div className="flex justify-center items-center h-screen">記事が見つかりません</div>;
 
@@ -53,6 +65,14 @@ export default function BlogPost({ params }: { params: { id: string } }) {
       <h1 className="text-3xl font-bold mb-4">{post.title}</h1>
       <p className="text-gray-500 mb-4">{post.date}</p>
       <div className="mb-8" dangerouslySetInnerHTML={{ __html: post.content }}></div>
+      {isAdmin && (
+        <button
+          onClick={handleTweet}
+          className="bg-blue-400 text-white px-4 py-2 rounded hover:bg-blue-500 mb-4"
+        >
+          ツイートする
+        </button>
+      )}
       <Link href="/blog" className="text-blue-500 hover:underline">
         記事一覧に戻る
       </Link>
