@@ -1,17 +1,17 @@
 'use client'
 
-import React, { useState, useEffect, useCallback } from 'react';
-import { useRouter } from 'next/navigation';
-import { EditorContent, useEditor } from '@tiptap/react';
-import StarterKit from '@tiptap/starter-kit';
-import Link from '@tiptap/extension-link';
-import CodeBlock from '@tiptap/extension-code-block';
-import Placeholder from '@tiptap/extension-placeholder';
-import Image from '@tiptap/extension-image';
-import { Node, mergeAttributes } from '@tiptap/core';
-import { createPost, deleteDraft, getDraft, saveDraft, updatePost } from '@/lib/posts';
-import { User } from '@supabase/supabase-js';
-import { uploadImage } from '@/lib/supabase';
+import { createPost, deleteDraft, getDraft, saveDraft, updatePost } from '@/lib/posts'
+import { uploadImage } from '@/lib/supabase'
+import { User } from '@supabase/supabase-js'
+import { Node, mergeAttributes } from '@tiptap/core'
+import CodeBlock from '@tiptap/extension-code-block'
+import Image from '@tiptap/extension-image'
+import Link from '@tiptap/extension-link'
+import Placeholder from '@tiptap/extension-placeholder'
+import { EditorContent, useEditor } from '@tiptap/react'
+import StarterKit from '@tiptap/starter-kit'
+import { useRouter } from 'next/navigation'
+import React, { useCallback, useEffect, useState } from 'react'
 
 const CustomLink = Link.extend({
   inclusive: false,
@@ -169,42 +169,37 @@ export default function PostEditor({ initialTitle = '', initialContent = '', pos
     loadDraft();
   }, [user, postId, editor]);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setError('');
-    if (!user) {
-      setError('ログインが必要です。');
-      return;
-    }
-    const content = editor?.getHTML() || '';
-    let result;
-    if (postId) {
-      result = await updatePost(postId, { title, content });
-    } else {
-      result = await createPost({ title, content });
-    }
-    if (result) {
-      if (!postId) {
-        await deleteDraft(user.id);
+  const handleSaveDraft = async () => {
+    if (user) {
+      try {
+        await saveDraft({
+          user_id: user.id,
+          title: editor.getText(),
+          content: editor.getHTML(),
+        });
+        // ドラフト保存後の処理
+      } catch (error) {
+        console.error('Error saving draft:', error);
       }
-      router.push('/blog');
-    } else {
-      setError(postId ? '記事の更新に失敗しました。' : '記事の作成に失敗しました。');
     }
   };
 
-  const handleSaveDraft = useCallback(async () => {
-    if (!user) return;
-    setIsSaving(true);
-    const content = editor?.getHTML() || '';
-    const draft = await saveDraft({ title, content, user_id: user.id });
-    setIsSaving(false);
-    if (draft) {
-      alert('下書きを保存しました。');
-    } else {
-      setError('下書きの保存に失敗しました。');
+  const handleSubmit = async () => {
+    if (user) {
+      try {
+        const newPost = await createPost({
+          title: editor.getText(),
+          content: editor.getHTML(),
+          // 他の必要なフィールド
+        });
+        if (newPost) {
+          // 投稿作成後の処理
+        }
+      } catch (error) {
+        console.error('Error creating post:', error);
+      }
     }
-  }, [user, title, editor]);
+  };
 
   const handleImageUpload = async (file: File, view?: any, event?: DragEvent) => {
     const imageUrl = await uploadImage(file);
@@ -256,7 +251,7 @@ export default function PostEditor({ initialTitle = '', initialContent = '', pos
             </button>
           )}
           <button type="submit" className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">
-            {postId ? '更新する' : '��稿する'}
+            {postId ? '更新する' : '投稿する'}
           </button>
         </div>
       </form>

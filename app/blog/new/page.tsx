@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { getCurrentUser } from '@/lib/supabase';
 import PostEditor from '@/app/components/PostEditor';
+import { createPost } from '@/lib/posts'
 
 export default function NewPost() {
   const [user, setUser] = useState(null);
@@ -30,5 +31,13 @@ export default function NewPost() {
     return null;
   }
 
-  return <PostEditor user={user} />;
+  const handleSubmit = async (title: string, content: string) => {
+    const post = await createPost({ title, content });
+    if (post) {
+      // 投稿作成後のリダイレクトなどの処理
+      router.push(`/blog/${post.id}`);
+    }
+  };
+
+  return <PostEditor user={user} onSubmit={handleSubmit} />;
 }

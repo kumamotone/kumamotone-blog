@@ -1,6 +1,6 @@
 'use client'
 
-import { getAllPosts, Post } from "@/lib/posts"
+import { getAllPosts, Post, getAllDrafts, Draft } from "@/lib/posts"
 import Link from "next/link"
 import { useEffect, useState } from "react"
 import DOMPurify from 'dompurify'
@@ -9,6 +9,9 @@ import 'highlight.js/styles/github-dark.css' // または他のスタイル
 
 export default function BlogList() {
   const [posts, setPosts] = useState<Post[]>([])
+  const [drafts, setDrafts] = useState<Draft[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const user = /* ユーザー情報の取得ロジック */;
 
   useEffect(() => {
     async function loadPosts() {
@@ -17,6 +20,18 @@ export default function BlogList() {
     }
     loadPosts()
   }, [])
+
+  useEffect(() => {
+    async function loadDrafts() {
+      if (user) {
+        const fetchedDrafts = await getAllDrafts(user.id);
+        setDrafts(fetchedDrafts);
+      }
+      setIsLoading(false);
+    }
+
+    loadDrafts();
+  }, [user]);
 
   useEffect(() => {
     if (posts.length > 0) {

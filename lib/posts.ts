@@ -3,8 +3,8 @@ import { supabase } from './supabase'
 export interface Post {
   id: number;
   title: string;
-  date: string;
   content: string;
+  created_at: string;
 }
 
 export interface Draft extends Omit<Post, 'id'> {
@@ -50,17 +50,17 @@ export async function createPost(post: Omit<Post, 'id' | 'created_at'>): Promise
         created_at: new Date().toISOString() // dateの代わりにcreated_atを使用
       })
       .select()
-      .single()
+      .single(); // 単一の投稿を返すように変更
 
     if (error) {
-      console.error('Error creating post:', error)
-      throw error
+      console.error('Error creating post:', error);
+      throw error;
     }
 
-    return data
+    return data;
   } catch (error) {
-    console.error('Error creating post:', error)
-    return null
+    console.error('Error creating post:', error);
+    return null;
   }
 }
 
@@ -142,19 +142,19 @@ export async function deleteDraft(user_id: string): Promise<boolean> {
   return true
 }
 
-export async function getAllDrafts(user_id: string): Promise<Draft[]> {
+export async function getAllDrafts(userId: string): Promise<Draft[]> {
   const { data, error } = await supabase
     .from('drafts')
     .select('*')
-    .eq('user_id', user_id)
-    .order('date', { ascending: false })
+    .eq('user_id', userId)
+    .order('created_at', { ascending: false });
 
   if (error) {
-    console.error('Error fetching drafts:', error)
-    return []
+    console.error('Error fetching drafts:', error);
+    return [];
   }
 
-  return data || []
+  return data || [];
 }
 
 export async function getPaginatedPosts(page: number, perPage: number = 5): Promise<{ posts: Post[], total: number }> {

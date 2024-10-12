@@ -1,13 +1,12 @@
 'use client'
 
-import { useState, useEffect } from "react";
-import Link from "next/link";
-import { useRouter, useSearchParams } from "next/navigation";
-import { getPaginatedPosts, Post } from "@/lib/posts";
-import { getCurrentUser } from "@/lib/supabase";
-import { User } from "@supabase/supabase-js";
-import DOMPurify from 'dompurify';
-import React from 'react';
+import { getPaginatedPosts, Post } from "@/lib/posts"
+import { getCurrentUser } from "@/lib/supabase"
+import { User } from "@supabase/supabase-js"
+import DOMPurify from 'dompurify'
+import Link from "next/link"
+import { useRouter, useSearchParams } from "next/navigation"
+import React, { useEffect, useState } from 'react'
 
 function LoadingSkeleton() {
   return (
@@ -139,7 +138,7 @@ export default function Home() {
                 <div 
                   className="text-gray-700 mt-4 mb-4 prose"
                   dangerouslySetInnerHTML={{
-                    __html: DOMPurify.sanitize(post.content.substring(0, 300) + (post.content.length > 300 ? '...' : ''), {
+                    __html: DOMPurify.sanitize(post.content, {
                       ALLOWED_TAGS: ['p', 'strong', 'em', 'u', 's', 'a', 'h1', 'h2', 'h3', 'ul', 'ol', 'li', 'blockquote', 'img'],
                       ALLOWED_ATTR: ['href', 'target', 'src', 'alt', 'width', 'height']
                     })
