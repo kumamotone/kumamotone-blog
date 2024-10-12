@@ -8,6 +8,7 @@ import Link from "next/link"
 import { useRouter, useSearchParams } from "next/navigation"
 import React, { useEffect, useState } from 'react'
 import { FiArrowUp, FiEdit, FiTwitter } from 'react-icons/fi'
+import { FaReact } from 'react-icons/fa'
 
 function LoadingSkeleton() {
   return (
@@ -108,12 +109,20 @@ export default function Home() {
   }
 
   return (
-    <div className="pb-12">
+    <div className="pb-12 relative">
+      {user && (
+        <div className="absolute top-4 right-4">
+          <Link href="/blog/new" className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 transition duration-300 flex items-center">
+            <FiEdit className="mr-2" />
+            新しい記事を作成
+          </Link>
+        </div>
+      )}
       <div className="mb-8">
         <h1 className="text-4xl font-bold text-green-800 mb-2">
           熊小屋
         </h1>
-        <p className="text-lg text-gray-600 mb-4">I love tech and pure blogs.</p>
+        <p className="text-lg text-gray-600 mb-4">I love pure blog.</p>
         <div className="flex space-x-4 text-sm text-gray-600">
           <a href="https://twitter.com/kumamo_tone" target="_blank" rel="noopener noreferrer" className="flex items-center hover:text-green-600">
             <FiTwitter className="mr-1" />
@@ -125,13 +134,6 @@ export default function Home() {
           </a>
         </div>
       </div>
-      {user && (
-        <div className="mb-8">
-          <Link href="/blog/new" className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 transition duration-300">
-            新しい記事を作成
-          </Link>
-        </div>
-      )}
       {blogPosts.length === 0 ? (
         <p className="text-gray-600">記事がありません。</p>
       ) : (
