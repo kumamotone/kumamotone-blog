@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { createPost } from '@/lib/posts';
+import { signInAnonymously } from '@/lib/supabase';
 
 export default function NewPost() {
   const [title, setTitle] = useState('');
@@ -11,8 +12,8 @@ export default function NewPost() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const date = new Date().toISOString().split('T')[0]; // YYYY-MM-DD形式
-    await createPost({ title, content, date });
+    await signInAnonymously(); // 匿名認証を行う
+    await createPost({ title, content });
     router.push('/blog');
   };
 

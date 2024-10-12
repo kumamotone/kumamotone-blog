@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import Link from "next/link";
 import { useRouter } from 'next/navigation';
-import { getPostById, deletePost } from "@/lib/posts";
+import { getPostById, deletePost, Post } from "@/lib/posts";
 
 export default function BlogPost({ params }: { params: { id: string } }) {
   const [post, setPost] = useState<Post | null>(null);

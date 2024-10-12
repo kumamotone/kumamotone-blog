@@ -18,6 +18,7 @@ export async function getAllPosts(): Promise<Post[]> {
     return []
   }
 
+  console.log('Supabase response:', data); // デバッグログを追加
   return data || []
 }
 
@@ -36,10 +37,10 @@ export async function getPostById(id: number): Promise<Post | null> {
   return data
 }
 
-export async function createPost(post: Omit<Post, 'id'>): Promise<Post | null> {
+export async function createPost(post: Omit<Post, 'id' | 'date'>): Promise<Post | null> {
   const { data, error } = await supabase
     .from('posts')
-    .insert(post)
+    .insert({ ...post, date: new Date().toISOString().split('T')[0] })
     .select()
     .single()
 
