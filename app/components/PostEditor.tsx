@@ -15,7 +15,7 @@ import NextLink from 'next/link'
 import { useRouter } from 'next/navigation'
 import { EditorView } from 'prosemirror-view'
 import React, { useCallback, useEffect, useState } from 'react'
-import { FiEdit, FiList, FiSave, FiSend, FiHelpCircle } from 'react-icons/fi'
+import { FiEdit, FiHelpCircle, FiList, FiSave, FiSend } from 'react-icons/fi'
 
 const CustomLink = Link.extend({
   inclusive: false,
@@ -359,7 +359,7 @@ export default function PostEditor({ initialTitle = '', initialContent = '', pos
         }
       } catch (error) {
         console.error('Error creating/updating post:', error);
-        setError('投稿の作成/更新中にエラーが発生しました。');
+        setError('投稿の作成/��新中にエラーが発生しました。');
       } finally {
         setIsSaving(false);
       }
@@ -496,7 +496,7 @@ export default function PostEditor({ initialTitle = '', initialContent = '', pos
             <ul className="text-sm">
               <li>• # で見出し (H1〜H6)</li>
               <li>• --- で水平線</li>
-              <li>• > で引用</li>
+              <li>• {'>'}で引用</li>
               <li>• * または - でリスト</li>
               <li>• 1. で番号付きリスト</li>
               <li>• `コード` でインラインコード</li>
