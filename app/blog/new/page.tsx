@@ -4,7 +4,6 @@ import PostEditor from '@/app/components/PostEditor'
 import { createPost } from '@/lib/posts'
 import { getCurrentUser } from '@/lib/supabase'
 import { User } from '@supabase/supabase-js'; // User型をインポートしてください
-import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
 
@@ -43,9 +42,6 @@ export default function NewPost() {
   return (
     <div className="container mx-auto px-4 py-8">
       <div className="flex justify-between items-center mb-6">
-        <Link href="/drafts" className="text-blue-500 hover:underline">
-          下書き一覧
-        </Link>
       </div>
       <PostEditor user={user} onSubmit={handleSubmit} />
     </div>

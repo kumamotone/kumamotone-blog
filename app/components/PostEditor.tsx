@@ -15,7 +15,7 @@ import NextLink from 'next/link'
 import { useRouter } from 'next/navigation'
 import { EditorView } from 'prosemirror-view'
 import React, { useEffect, useState } from 'react'
-import { FiSave, FiList } from 'react-icons/fi';
+import { FiList, FiSave } from 'react-icons/fi'
 
 const CustomLink = Link.extend({
   inclusive: false,
