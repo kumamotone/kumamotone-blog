@@ -2,7 +2,6 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import Link from 'next/link'
 import { signInWithEmail } from '@/lib/supabase'
 
 export default function Login() {
@@ -57,9 +56,11 @@ export default function Login() {
           ログイン
         </button>
       </form>
+      {/* 新規登録へのリンクを削除または以下のようにコメントアウト
       <p className="mt-4">
         アカウントをお持ちでない方は<Link href="/signup" className="text-blue-500 hover:underline">こちらから新規登録</Link>してください。
       </p>
+      */}
     </div>
   )
 }

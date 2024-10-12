@@ -1,33 +1,14 @@
 'use client'
 
-import { useState } from 'react'
-import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { signUpWithEmail } from '@/lib/supabase'
 
 export default function Signup() {
-  const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
-  const [error, setError] = useState('')
-  const router = useRouter()
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setError('')
-    const { data, error } = await signUpWithEmail(email, password)
-    if (error) {
-      setError(error.message)
-    } else if (data.user) {
-      router.push('/blog')
-    } else {
-      setError('新規登録に失敗しました。')
-    }
-  }
-
   return (
     <div className="container mx-auto px-4 py-8">
       <h1 className="text-3xl font-bold mb-6">新規登録</h1>
-      {error && <p className="text-red-500 mb-4">{error}</p>}
+      <p className="mb-4">申し訳ありませんが、現在新規登録は一時的に停止しています。</p>
+      {/* 
+      新規登録フォームはコメントアウトされています
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
           <label htmlFor="email" className="block mb-2">メールアドレス</label>
@@ -55,8 +36,9 @@ export default function Signup() {
           登録する
         </button>
       </form>
+      */}
       <p className="mt-4">
-        すでにアカウントをお持ちの方は<Link href="/login" className="text-blue-500 hover:underline">こちらからログイン</Link>してください。
+        アカウントをお持ちの方は<Link href="/login" className="text-blue-500 hover:underline">こちらからログイン</Link>してください。
       </p>
     </div>
   )
