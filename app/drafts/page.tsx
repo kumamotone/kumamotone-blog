@@ -62,7 +62,7 @@ export default function DraftsList() {
               <Link href={`/blog/new?draft=${draft.user_id}`} className="text-xl font-semibold text-blue-600 hover:underline">
                 {draft.title}
               </Link>
-              <p className="text-gray-500 text-sm mt-1">{new Date(draft.date).toLocaleString()}</p>
+              <p className="text-gray-500 text-sm mt-1">{new Date(draft.created_at).toLocaleString()}</p>
               <button
                 onClick={() => handleDeleteDraft(draft.user_id)}
                 className="text-sm text-red-500 hover:underline mt-2 inline-block mr-4"

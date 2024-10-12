@@ -10,10 +10,11 @@ import Link from '@tiptap/extension-link'
 import Placeholder from '@tiptap/extension-placeholder'
 import { EditorContent, useEditor } from '@tiptap/react'
 import StarterKit from '@tiptap/starter-kit'
+import debounce from 'lodash/debounce'
+import NextLink from 'next/link'
 import { useRouter } from 'next/navigation'
 import { EditorView } from 'prosemirror-view'
-import React, { useEffect, useState, useCallback } from 'react'
-import debounce from 'lodash/debounce'
+import React, { useEffect, useState } from 'react'
 
 const CustomLink = Link.extend({
   inclusive: false,
@@ -179,11 +180,14 @@ export default function PostEditor({ initialTitle = '', initialContent = '', pos
           created_at: new Date().toISOString(),
         });
         setLastSavedAt(new Date());
+        setHasUnsavedChanges(false);
       } catch (error) {
         console.error('Error auto-saving draft:', error);
+        // ここでユーザーに通知するか、エラー状態を設定することができます
+        // 例: setError('ドラフトの自動保存に失敗しました。');
       }
     }
-  }, 2000); // 2秒のディレイ
+  }, 2000);
 
   const editor = useEditor({
     extensions: [
@@ -248,16 +252,26 @@ export default function PostEditor({ initialTitle = '', initialContent = '', pos
   useEffect(() => {
     async function loadDraft() {
       if (user && !postId) {
-        const drafts = await getDraft(user.id);
-        if (drafts.length > 0) {
-          const latestDraft = drafts[0];
-          setDraftContent({ title: latestDraft.title, content: latestDraft.content });
-          setShowDraftDialog(true);
+        try {
+          const drafts = await getDraft(user.id);
+          if (drafts.length > 0) {
+            const latestDraft = drafts[0];
+            setDraftContent({ title: latestDraft.title, content: latestDraft.content });
+            setShowDraftDialog(true);
+          }
+        } catch (error) {
+          console.error('Error loading draft:', error);
         }
       }
     }
     loadDraft();
   }, [user, postId]);
+
+  useEffect(() => {
+    if (editor && content) {
+      editor.commands.setContent(content);
+    }
+  }, [editor, content]);
 
   useEffect(() => {
     const handleBeforeUnload = (e: BeforeUnloadEvent) => {
@@ -279,7 +293,9 @@ export default function PostEditor({ initialTitle = '', initialContent = '', pos
     if (draftContent) {
       setTitle(draftContent.title);
       setContent(draftContent.content);
-      editor?.commands.setContent(draftContent.content);
+      if (editor) {
+        editor.commands.setContent(draftContent.content);
+      }
     }
     setShowDraftDialog(false);
   };
@@ -379,7 +395,16 @@ export default function PostEditor({ initialTitle = '', initialContent = '', pos
           </div>
         </div>
       )}
-      <h1 className="text-3xl font-bold mb-6">{postId ? '記事編集' : '新しい記事を作成'}</h1>
+      
+      <div className="flex justify-between items-center mb-6">
+        <h1 className="text-3xl font-bold">{postId ? '記事編集' : '新しい記事を作成'}</h1>
+        {postId && (
+          <NextLink href="/blog/new" className="text-blue-500 hover:underline">
+            新しい記事を書く
+          </NextLink>
+        )}
+      </div>
+      
       {error && <p className="text-red-500 mb-4">{error}</p>}
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
