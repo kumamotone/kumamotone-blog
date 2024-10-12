@@ -428,7 +428,7 @@ export default function PostEditor({ initialTitle = '', initialContent = '', pos
           <div className="flex items-center space-x-4">
             {lastSavedAt && (
               <p className="text-sm text-gray-500">
-                最終保存: {lastSavedAt.toLocaleString()}
+                自動保存: {lastSavedAt.toLocaleString()}
               </p>
             )}
             {!postId && (

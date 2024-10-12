@@ -104,23 +104,18 @@ export async function deletePost(id: number): Promise<boolean> {
   return true
 }
 
-export async function saveDraft(draft: Omit<Draft, 'date'>): Promise<Draft | null> {
-  const { data, error } = await supabase
-    .from('drafts')
-    .upsert({ 
-      ...draft, 
-      date: new Date().toISOString(),
-      user_id: (await supabase.auth.getUser()).data.user?.id
-    }, { onConflict: 'user_id' }) // onConflict オプションを追加
-    .select()
-    .single()
+export async function saveDraft(draft: Draft): Promise<boolean> {
+  try {
+    const { error } = await supabase
+      .from('drafts')
+      .upsert(draft, { onConflict: 'user_id' });
 
-  if (error) {
-    console.error('Error saving draft:', error)
-    return null
+    if (error) throw error;
+    return true;
+  } catch (error) {
+    console.error('Error saving draft:', error);
+    return false;
   }
-
-  return data
 }
 
 export async function getDraft(user_id: string): Promise<Draft[]> {
