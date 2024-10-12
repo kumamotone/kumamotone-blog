@@ -15,6 +15,7 @@ import NextLink from 'next/link'
 import { useRouter } from 'next/navigation'
 import { EditorView } from 'prosemirror-view'
 import React, { useEffect, useState } from 'react'
+import { FiSave, FiList } from 'react-icons/fi';
 
 const CustomLink = Link.extend({
   inclusive: false,
@@ -409,21 +410,28 @@ export default function PostEditor({ initialTitle = '', initialContent = '', pos
           </div>
         </div>
         <div className="flex justify-between items-center mt-4">
-          <div className="flex items-center space-x-4">
+          <div className="flex items-center space-x-2">
+            {!postId && (
+              <>
+                <button
+                  type="button"
+                  onClick={handleSaveDraft}
+                  className="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600 flex items-center"
+                  disabled={isSaving}
+                >
+                  <FiSave className="mr-2" />
+                  {isSaving ? '保存中...' : '下書き保存'}
+                </button>
+                <NextLink href="/drafts" className="bg-gray-300 text-gray-700 px-4 py-2 rounded hover:bg-gray-400 flex items-center">
+                  <FiList className="mr-2" />
+                  下書き一覧
+                </NextLink>
+              </>
+            )}
             {lastSavedAt && (
-              <p className="text-sm text-gray-500">
+              <p className="text-sm text-gray-500 ml-4">
                 自動保存: {lastSavedAt.toLocaleString()}
               </p>
-            )}
-            {!postId && (
-              <button
-                type="button"
-                onClick={handleSaveDraft}
-                className="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600"
-                disabled={isSaving}
-              >
-                {isSaving ? '保存中...' : '下書き保存'}
-              </button>
             )}
           </div>
           <button 
