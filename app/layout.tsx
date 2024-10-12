@@ -17,6 +17,7 @@ export default function RootLayout({
   useEffect(() => {
     async function loadUser() {
       const currentUser = await getCurrentUser();
+      console.log('Current user:', currentUser);  // デバッグ情報
       setUser(currentUser);
     }
     loadUser();

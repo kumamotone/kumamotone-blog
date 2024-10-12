@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
+import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import dynamic from 'next/dynamic';
 import { createPost, updatePost, saveDraft, getDraft, deleteDraft } from '@/lib/posts';
@@ -77,23 +77,13 @@ export default function PostEditor({ initialTitle = '', initialContent = '', pos
     }
   };
 
-  const handleImageUpload = useCallback(() => {
-    const input = document.createElement('input');
-    input.setAttribute('type', 'file');
-    input.setAttribute('accept', 'image/*');
-    input.click();
-
-    input.onchange = async () => {
-      const file = input.files?.[0];
-      if (file) {
-        const imageUrl = await uploadImage(file);
-        if (imageUrl && quillRef.current) {
-          const editor = quillRef.current.getEditor();
-          const range = editor.getSelection();
-          editor.insertEmbed(range.index, 'image', imageUrl);
-        }
-      }
-    };
+  const handleImageUpload = useCallback(async (file: File) => {
+    const imageUrl = await uploadImage(file);
+    if (imageUrl && quillRef.current) {
+      const editor = quillRef.current.getEditor();
+      const range = editor.getSelection();
+      editor.insertEmbed(range.index, 'image', imageUrl);
+    }
   }, []);
 
   const modules = useMemo(() => ({
@@ -106,8 +96,23 @@ export default function PostEditor({ initialTitle = '', initialContent = '', pos
         ['clean']
       ],
       handlers: {
-        image: handleImageUpload
+        image: () => {
+          const input = document.createElement('input');
+          input.setAttribute('type', 'file');
+          input.setAttribute('accept', 'image/*');
+          input.click();
+
+          input.onchange = async () => {
+            const file = input.files?.[0];
+            if (file) {
+              await handleImageUpload(file);
+            }
+          };
+        }
       }
+    },
+    clipboard: {
+      matchVisual: false,
     },
   }), [handleImageUpload]);
 
@@ -117,6 +122,21 @@ export default function PostEditor({ initialTitle = '', initialContent = '', pos
     'list', 'bullet', 'indent',
     'link', 'image'
   ];
+
+  const handleDrop = useCallback(async (event: React.DragEvent<HTMLDivElement>) => {
+    event.preventDefault();
+    const files = event.dataTransfer.files;
+    if (files && files.length > 0) {
+      const file = files[0];
+      if (file.type.startsWith('image/')) {
+        await handleImageUpload(file);
+      }
+    }
+  }, [handleImageUpload]);
+
+  const handleDragOver = useCallback((event: React.DragEvent<HTMLDivElement>) => {
+    event.preventDefault();
+  }, []);
 
   return (
     <div className="container mx-auto px-4 py-8 max-w-4xl">
@@ -136,15 +156,17 @@ export default function PostEditor({ initialTitle = '', initialContent = '', pos
         </div>
         <div>
           <label htmlFor="content" className="block mb-2">内容</label>
-          <ReactQuill
-            ref={quillRef}
-            theme="snow"
-            value={content}
-            onChange={setContent}
-            modules={modules}
-            formats={formats}
-            className="h-64 mb-12"
-          />
+          <div onDrop={handleDrop} onDragOver={handleDragOver}>
+            <ReactQuill
+              ref={quillRef}
+              theme="snow"
+              value={content}
+              onChange={setContent}
+              modules={modules}
+              formats={formats}
+              className="h-64 mb-12"
+            />
+          </div>
         </div>
         <div className="flex justify-between">
           {!postId && (
