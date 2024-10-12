@@ -2,9 +2,8 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { useRouter } from 'next/navigation';
 import { getAllPosts, Post } from "@/lib/posts";
-import { getCurrentUser, signOut } from "@/lib/supabase";
+import { getCurrentUser } from "@/lib/supabase";
 import { User } from "@supabase/supabase-js";
 
 function LoadingSkeleton() {
@@ -24,7 +23,6 @@ export default function BlogList() {
   const [user, setUser] = useState<User | null>(null);
   const [blogPosts, setBlogPosts] = useState<Post[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const router = useRouter();
 
   useEffect(() => {
     async function loadData() {
@@ -45,12 +43,6 @@ export default function BlogList() {
     loadData();
   }, []);
 
-  const handleLogout = async () => {
-    await signOut();
-    setUser(null);
-    router.push('/');
-  };
-
   if (isLoading) {
     return (
       <div className="container mx-auto px-4 py-8 max-w-4xl">
@@ -67,33 +59,13 @@ export default function BlogList() {
   return (
     <div className="container mx-auto px-4 py-8 max-w-4xl">
       <h1 className="text-4xl font-bold mb-8 text-center">ブログ記事一覧</h1>
-      <div className="mb-8 flex justify-between items-center">
-        {user ? (
-          <div className="flex items-center space-x-4">
-            <p className="text-lg">ようこそ、{user.email}さん！</p>
-            <button
-              onClick={handleLogout}
-              className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600 transition duration-300"
-            >
-              ログアウト
-            </button>
-          </div>
-        ) : (
-          <Link href="/login" className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 transition duration-300">
-            ログイン
-          </Link>
-        )}
-        {user && (
-          <Link href="/blog/new" className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600 transition duration-300">
+      {user && (
+        <div className="mb-8 flex justify-end">
+          <Link href="/blog/new" className="text-sm text-gray-600 hover:underline">
             新しい記事を作成
           </Link>
-        )}
-        {user && (
-          <Link href="/drafts" className="bg-yellow-500 text-white px-4 py-2 rounded hover:bg-yellow-600 transition duration-300 ml-4">
-            下書き一覧
-          </Link>
-        )}
-      </div>
+        </div>
+      )}
       {blogPosts.length === 0 ? (
         <p className="text-center text-gray-500">記事がありません。</p>
       ) : (
@@ -105,7 +77,7 @@ export default function BlogList() {
               </Link>
               <p className="text-gray-500 text-sm mt-1">{post.date}</p>
               {user && (
-                <Link href={`/blog/edit/${post.id}`} className="text-sm text-blue-500 hover:underline mt-2 inline-block">
+                <Link href={`/blog/edit/${post.id}`} className="text-sm text-gray-600 hover:underline mt-2 inline-block">
                   編集
                 </Link>
               )}

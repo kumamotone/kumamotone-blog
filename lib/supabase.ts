@@ -42,9 +42,9 @@ export async function signUpWithEmail(email: string, password: string) {
 
 // サインアウトする関数
 export async function signOut() {
-  const { error } = await supabase.auth.signOut()
+  const { error } = await supabase.auth.signOut();
   if (error) {
-    console.error('Error signing out:', error)
+    console.error('Error signing out:', error);
   }
 }
 
