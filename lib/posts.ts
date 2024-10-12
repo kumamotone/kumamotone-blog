@@ -37,6 +37,7 @@ export async function getPostById(id: number): Promise<Post | null> {
     return null
   }
 
+  console.log('Fetched post:', JSON.stringify(data, null, 2)); // 整形してログ出力
   return data
 }
 
@@ -44,7 +45,11 @@ export async function createPost(post: Omit<Post, 'id' | 'date'>): Promise<Post 
   try {
     const { data, error } = await supabase
       .from('posts')
-      .insert({ ...post, date: new Date().toISOString().split('T')[0] })
+      .insert({ 
+        ...post, 
+        date: new Date().toISOString().split('T')[0],
+        content: post.content || '' // コンテンツが未定義の場合は空文字列を設定
+      })
       .select()
       .single()
 

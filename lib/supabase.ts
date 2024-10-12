@@ -1,4 +1,4 @@
-import { createClient } from '@supabase/supabase-js'
+import { createClient, User } from '@supabase/supabase-js'
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
 const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
@@ -85,7 +85,7 @@ export async function uploadImage(file: File) {
   const fileName = `${Math.random()}.${fileExt}`
   const filePath = `${fileName}`
 
-  const { data, error } = await supabase.storage
+  const { error } = await supabase.storage
     .from('blog-images')
     .upload(filePath, file, {
       cacheControl: '3600',

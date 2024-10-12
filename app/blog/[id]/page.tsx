@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 import { getPostById, deletePost, Post } from "@/lib/posts";
 import { getCurrentUser, isAdminUser } from "@/lib/supabase";
 import { User } from "@supabase/supabase-js";
+import DOMPurify from 'dompurify';
 
 export default function BlogPost({ params }: { params: { id: string } }) {
   const [post, setPost] = useState<Post | null>(null);
@@ -64,7 +65,15 @@ export default function BlogPost({ params }: { params: { id: string } }) {
     <div className="container mx-auto px-4 py-8">
       <h1 className="text-3xl font-bold mb-4">{post.title}</h1>
       <p className="text-gray-500 mb-4">{post.date}</p>
-      <div className="mb-8 prose prose-img:mx-auto" dangerouslySetInnerHTML={{ __html: post.content }}></div>
+      <div 
+        className="mb-8 prose prose-lg max-w-none"
+        dangerouslySetInnerHTML={{ 
+          __html: DOMPurify.sanitize(post.content, {
+            ALLOWED_TAGS: ['p', 'strong', 'em', 'u', 's', 'a', 'h1', 'h2', 'h3', 'ul', 'ol', 'li', 'blockquote', 'img'],
+            ALLOWED_ATTR: ['href', 'target', 'src', 'alt', 'width', 'height']
+          })
+        }}
+      />
       {isAdmin && (
         <button
           onClick={handleTweet}

@@ -1,18 +1,91 @@
 'use client'
 
-import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
-import dynamic from 'next/dynamic';
-import { createPost, updatePost, saveDraft, getDraft, deleteDraft } from '@/lib/posts';
-import { uploadImage } from '@/lib/supabase';
+import { EditorContent, useEditor } from '@tiptap/react';
+import StarterKit from '@tiptap/starter-kit';
+import Link from '@tiptap/extension-link';
+import CodeBlock from '@tiptap/extension-code-block';
+import Placeholder from '@tiptap/extension-placeholder';
+import Image from '@tiptap/extension-image';
+import { Node, mergeAttributes } from '@tiptap/core';
+import { createPost, deleteDraft, getDraft, saveDraft, updatePost } from '@/lib/posts';
 import { User } from '@supabase/supabase-js';
+import { uploadImage } from '@/lib/supabase';
 
-const ReactQuill = dynamic(() => import('react-quill'), {
-  ssr: false,
-  loading: () => <p>Loading editor...</p>,
+const CustomLink = Link.extend({
+  inclusive: false,
+  parseHTML() {
+    return [
+      {
+        tag: 'a[href]:not([href *= "javascript:" i])',
+      },
+    ]
+  },
+  renderHTML({ HTMLAttributes }) {
+    return ['a', HTMLAttributes, 0]
+  },
 });
 
-import 'react-quill/dist/quill.snow.css';
+const CustomCodeBlock = CodeBlock.extend({
+  addKeyboardShortcuts() {
+    return {
+      'Mod-`': () => this.editor.commands.toggleCodeBlock(),
+    }
+  },
+});
+
+const Hashtag = Node.create({
+  name: 'hashtag',
+  group: 'inline',
+  inline: true,
+  selectable: false,
+  atom: true,
+
+  addAttributes() {
+    return {
+      hashtag: {
+        default: null,
+        parseHTML: element => element.getAttribute('data-hashtag'),
+        renderHTML: attributes => {
+          return {
+            'data-hashtag': attributes.hashtag,
+          }
+        },
+      },
+    }
+  },
+
+  parseHTML() {
+    return [
+      {
+        tag: 'span[data-hashtag]',
+      },
+    ]
+  },
+
+  renderHTML({ node, HTMLAttributes }) {
+    return ['span', mergeAttributes(HTMLAttributes, { class: 'hashtag' }), `#${node.attrs.hashtag}`]
+  },
+
+  renderText({ node }) {
+    return `#${node.attrs.hashtag}`
+  },
+});
+
+const CustomImage = Image.extend({
+  addAttributes() {
+    return {
+      ...this.parent?.(),
+      width: {
+        default: null,
+      },
+      height: {
+        default: null,
+      },
+    }
+  },
+});
 
 interface PostEditorProps {
   initialTitle?: string;
@@ -23,11 +96,65 @@ interface PostEditorProps {
 
 export default function PostEditor({ initialTitle = '', initialContent = '', postId, user }: PostEditorProps) {
   const [title, setTitle] = useState(initialTitle);
-  const [content, setContent] = useState(initialContent);
   const [error, setError] = useState('');
   const [isSaving, setIsSaving] = useState(false);
   const router = useRouter();
-  const quillRef = useRef<any>(null);
+
+  const editor = useEditor({
+    extensions: [
+      StarterKit.configure({
+        codeBlock: false,
+      }),
+      CustomLink,
+      CustomCodeBlock,
+      Hashtag,
+      CustomImage.configure({
+        inline: true,
+        allowBase64: true,
+      }),
+      Placeholder.configure({
+        placeholder: 'ここに記事を書いてください...',
+      }),
+    ],
+    content: initialContent || '', // 初期コンテンツが空の場合は空文字列を設定
+    editorProps: {
+      attributes: {
+        class: 'prose prose-sm sm:prose lg:prose-lg xl:prose-2xl mx-auto focus:outline-none',
+      },
+      handleDrop: (view, event, slice, moved) => {
+        if (!moved && event.dataTransfer && event.dataTransfer.files && event.dataTransfer.files[0]) {
+          const file = event.dataTransfer.files[0];
+          const fileType = file.type;
+          if (fileType.startsWith('image/')) {
+            event.preventDefault();
+            handleImageUpload(file, view, event);
+            return true;
+          }
+        }
+        return false;
+      },
+      handlePaste: (view, event, slice) => {
+        const items = event.clipboardData?.items;
+        if (items) {
+          for (const item of items) {
+            if (item.type.startsWith('image/')) {
+              event.preventDefault();
+              const file = item.getAsFile();
+              if (file) {
+                handleImageUpload(file, view);
+                return true;
+              }
+            }
+          }
+        }
+        return false;
+      },
+    },
+    onUpdate: ({ editor }) => {
+      const content = editor.getHTML();
+      // ここでリアルタイムプレビューの更新や自動保存の処理を行うことができます
+    },
+  });
 
   useEffect(() => {
     async function loadDraft() {
@@ -35,12 +162,12 @@ export default function PostEditor({ initialTitle = '', initialContent = '', pos
         const draft = await getDraft(user.id);
         if (draft) {
           setTitle(draft.title);
-          setContent(draft.content);
+          editor?.commands.setContent(draft.content);
         }
       }
     }
     loadDraft();
-  }, [user, postId]);
+  }, [user, postId, editor]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -49,6 +176,7 @@ export default function PostEditor({ initialTitle = '', initialContent = '', pos
       setError('ログインが必要です。');
       return;
     }
+    const content = editor?.getHTML() || '';
     let result;
     if (postId) {
       result = await updatePost(postId, { title, content });
@@ -65,9 +193,10 @@ export default function PostEditor({ initialTitle = '', initialContent = '', pos
     }
   };
 
-  const handleSaveDraft = async () => {
+  const handleSaveDraft = useCallback(async () => {
     if (!user) return;
     setIsSaving(true);
+    const content = editor?.getHTML() || '';
     const draft = await saveDraft({ title, content, user_id: user.id });
     setIsSaving(false);
     if (draft) {
@@ -75,68 +204,23 @@ export default function PostEditor({ initialTitle = '', initialContent = '', pos
     } else {
       setError('下書きの保存に失敗しました。');
     }
-  };
+  }, [user, title, editor]);
 
-  const handleImageUpload = useCallback(async (file: File) => {
+  const handleImageUpload = async (file: File, view?: any, event?: DragEvent) => {
     const imageUrl = await uploadImage(file);
-    if (imageUrl && quillRef.current) {
-      const editor = quillRef.current.getEditor();
-      const range = editor.getSelection();
-      editor.insertEmbed(range.index, 'image', imageUrl);
-    }
-  }, []);
-
-  const modules = useMemo(() => ({
-    toolbar: {
-      container: [
-        [{ 'header': [1, 2, false] }],
-        ['bold', 'italic', 'underline', 'strike', 'blockquote'],
-        [{'list': 'ordered'}, {'list': 'bullet'}, {'indent': '-1'}, {'indent': '+1'}],
-        ['link', 'image'],
-        ['clean']
-      ],
-      handlers: {
-        image: () => {
-          const input = document.createElement('input');
-          input.setAttribute('type', 'file');
-          input.setAttribute('accept', 'image/*');
-          input.click();
-
-          input.onchange = async () => {
-            const file = input.files?.[0];
-            if (file) {
-              await handleImageUpload(file);
-            }
-          };
+    if (imageUrl && editor) {
+      if (view && event) {
+        const { state: { tr }, dispatch } = view;
+        const coordinates = view.posAtCoords({ left: event.clientX, top: event.clientY });
+        if (coordinates) {
+          const node = editor.schema.nodes.image.create({ src: imageUrl, alt: file.name });
+          dispatch(tr.insert(coordinates.pos, node));
         }
-      }
-    },
-    clipboard: {
-      matchVisual: false,
-    },
-  }), [handleImageUpload]);
-
-  const formats = [
-    'header',
-    'bold', 'italic', 'underline', 'strike', 'blockquote',
-    'list', 'bullet', 'indent',
-    'link', 'image'
-  ];
-
-  const handleDrop = useCallback(async (event: React.DragEvent<HTMLDivElement>) => {
-    event.preventDefault();
-    const files = event.dataTransfer.files;
-    if (files && files.length > 0) {
-      const file = files[0];
-      if (file.type.startsWith('image/')) {
-        await handleImageUpload(file);
+      } else {
+        editor.chain().focus().setImage({ src: imageUrl, alt: file.name }).run();
       }
     }
-  }, [handleImageUpload]);
-
-  const handleDragOver = useCallback((event: React.DragEvent<HTMLDivElement>) => {
-    event.preventDefault();
-  }, []);
+  };
 
   return (
     <div className="container mx-auto px-4 py-8 max-w-4xl">
@@ -156,16 +240,8 @@ export default function PostEditor({ initialTitle = '', initialContent = '', pos
         </div>
         <div>
           <label htmlFor="content" className="block mb-2">内容</label>
-          <div onDrop={handleDrop} onDragOver={handleDragOver}>
-            <ReactQuill
-              ref={quillRef}
-              theme="snow"
-              value={content}
-              onChange={setContent}
-              modules={modules}
-              formats={formats}
-              className="h-64 mb-12"
-            />
+          <div className="border border-gray-300 rounded p-2 min-h-[300px]">
+            <EditorContent editor={editor} />
           </div>
         </div>
         <div className="flex justify-between">

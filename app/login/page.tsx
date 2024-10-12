@@ -17,9 +17,8 @@ export default function Login() {
     if (signInError) {
       setError('ログインに失敗しました。' + signInError.message)
     } else if (user) {
-      console.log('Login successful, redirecting to /blog');
-      // ここでリダイレクトを強制的に行う
-      window.location.href = '/blog';
+      console.log('Login successful, reloading page');
+      window.location.href = '/'; // ホームページにリダイレクトし、ページをリロード
     } else {
       setError('ログインに失敗しました。')
     }
