@@ -15,6 +15,7 @@ import { useRouter } from 'next/navigation'
 import { EditorView } from 'prosemirror-view'
 import React, { useCallback, useEffect, useState } from 'react'
 import { FiEdit, FiHelpCircle, FiList, FiSave, FiSend, FiTrash2, FiAlertTriangle } from 'react-icons/fi'
+import { toast } from 'react-toastify';
 
 const CustomLink = Link.extend({
   inclusive: false,
@@ -210,7 +211,7 @@ export default function PostEditor({ initialTitle = '', initialContent = '', pos
         placeholder: 'ここに記事を書いてください...',
       }),
     ],
-    content: initialContent, // 初期コンテンツを直接ここで設定
+    content: initialContent,
     editorProps: {
       attributes: {
         class: 'prose prose-sm sm:prose lg:prose-lg xl:prose-2xl mx-auto focus:outline-none',
@@ -253,7 +254,7 @@ export default function PostEditor({ initialTitle = '', initialContent = '', pos
       // 文字数の更新をトリガー
       getWordCount();
     },
-  }, [initialContent]); // initialContentが変更されたときにエディタを再作成
+  });
 
   useEffect(() => {
     if (editor && !editor.isDestroyed) {
@@ -403,18 +404,34 @@ export default function PostEditor({ initialTitle = '', initialContent = '', pos
   };
 
   const handleImageUpload = async (file: File, view: EditorView, event?: DragEvent) => {
-    const imageUrl = await uploadImage(file);
-    if (imageUrl && editor) {
-      if (view && event) {
-        const { state: { tr }, dispatch } = view;
-        const coordinates = view.posAtCoords({ left: event.clientX, top: event.clientY });
-        if (coordinates) {
-          const node = editor.schema.nodes.image.create({ src: imageUrl, alt: file.name });
-          dispatch(tr.insert(coordinates.pos, node));
-        }
-      } else {
-        editor.chain().focus().setImage({ src: imageUrl, alt: file.name }).run();
+    try {
+      const imageUrl = await uploadImage(file);
+      if (process.env.NODE_ENV !== 'production') {
+        console.log('Received image URL:', imageUrl); // デバッグ用（開発環境のみ）
       }
+
+      if (!imageUrl) {
+        throw new Error('画像URLが取得できませんでした');
+      }
+
+      if (editor && !editor.isDestroyed) {
+        if (view && event) {
+          const { state: { tr }, dispatch } = view;
+          const coordinates = view.posAtCoords({ left: event.clientX, top: event.clientY });
+          if (coordinates) {
+            const node = editor.schema.nodes.image.create({ src: imageUrl, alt: file.name });
+            dispatch(tr.insert(coordinates.pos, node));
+          }
+        } else {
+          editor.chain().focus().setImage({ src: imageUrl, alt: file.name }).run();
+        }
+        toast.success('画像がアップロードされました');
+      } else {
+        throw new Error('エディターが初期化されていないか、破棄されています');
+      }
+    } catch (error) {
+      console.error('画像のアップロードに失敗しました:', error);
+      toast.error(`画像のアップロードに失敗しました: ${error instanceof Error ? error.message : '不明なエラー'}`);
     }
   };
 
@@ -505,7 +522,7 @@ export default function PostEditor({ initialTitle = '', initialContent = '', pos
                   className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600 flex items-center"
                 >
                   <FiTrash2 className="mr-2" />
-                  下書き削��
+                  下書き削除
                 </button>
               </>
             )}

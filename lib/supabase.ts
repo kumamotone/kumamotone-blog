@@ -38,7 +38,7 @@ export async function signUpWithEmail(email: string, password: string) {
     }
 
     if (data.user) {
-      // ユーザーをusersテーブルに追加
+      // ユーザーをusersテールに追加
       const { error: insertError } = await supabase
         .from('users')
         .insert({ id: data.user.id, is_admin: false })
@@ -91,26 +91,38 @@ export async function isAdminUser(user: User | null): Promise<boolean> {
   return data?.is_admin || false;
 }
 
-export async function uploadImage(file: File) {
-  const fileExt = file.name.split('.').pop()
-  const fileName = `${Math.random()}.${fileExt}`
-  const filePath = `${fileName}`
+export const uploadImage = async (file: File): Promise<string> => {
+  try {
+    const fileExt = file.name.split('.').pop();
+    const fileName = `${Date.now()}_${Math.random().toString(36).substr(2, 9)}.${fileExt}`;
+    const filePath = fileName;
 
-  const { error } = await supabase.storage
-    .from('blog-images')
-    .upload(filePath, file, {
-      cacheControl: '3600',
-      upsert: false
-    })
+    const { data, error } = await supabase.storage
+      .from('blog-images')
+      .upload(filePath, file);
 
-  if (error) {
-    console.error('Error uploading image:', error)
-    return null
+    if (error) {
+      console.error('Supabase storage error:', error);
+      throw new Error(`画像のアップロードに失敗しました: ${error.message}`);
+    }
+
+    if (!data) {
+      throw new Error('アップロードデータが見つかりません');
+    }
+
+    const { data: urlData } = supabase.storage
+      .from('blog-images')
+      .getPublicUrl(filePath);
+
+    if (!urlData || !urlData.publicUrl) {
+      throw new Error('公開URLが見つかりません');
+    }
+
+    console.log('Uploaded image URL:', urlData.publicUrl); // デバッグ用
+
+    return urlData.publicUrl;
+  } catch (error) {
+    console.error('画像アップロードエラー:', error);
+    throw error;
   }
-
-  const { data: urlData } = supabase.storage
-    .from('blog-images')
-    .getPublicUrl(filePath)
-
-  return urlData.publicUrl
-}
+};
