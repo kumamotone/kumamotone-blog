@@ -187,19 +187,26 @@ export default function PostEditor({ initialTitle = '', initialContent = '', pos
     }
   };
 
-  const handleSubmit = async () => {
-    if (user) {
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault(); // フォームのデフォルト送信を防ぐ
+    if (user && editor) {
       try {
+        setIsSaving(true);
         const newPost = await createPost({
-          title: editor.getText(),
+          title: title, // タイトルステートを使用
           content: editor.getHTML(),
           // 他の必要なフィールド
         });
         if (newPost) {
           // 投稿作成後の処理
+          await deleteDraft(user.id); // 下書きを削除
+          router.push(`/blog/${newPost.id}`); // 新しい投稿ページにリダイレクト
         }
       } catch (error) {
         console.error('Error creating post:', error);
+        setError('投稿の作成中にエラーが発生しました。');
+      } finally {
+        setIsSaving(false);
       }
     }
   };
@@ -253,8 +260,12 @@ export default function PostEditor({ initialTitle = '', initialContent = '', pos
               {isSaving ? '保存中...' : '下書き保存'}
             </button>
           )}
-          <button type="submit" className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">
-            {postId ? '更新する' : '投稿する'}
+          <button 
+            type="submit" 
+            className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
+            disabled={isSaving}
+          >
+            {isSaving ? '投稿中...' : (postId ? '更新する' : '投稿する')}
           </button>
         </div>
       </form>
