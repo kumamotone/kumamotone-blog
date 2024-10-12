@@ -167,7 +167,7 @@ export default function PostEditor({ initialTitle = '', initialContent = '', pos
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   const router = useRouter();
 
-  // debounceされた自動保存関数
+  // debounceされた自動保存関数を更新
   const debouncedSaveDraft = debounce(async (title: string, content: string) => {
     if (user && !postId) {
       try {
@@ -180,9 +180,7 @@ export default function PostEditor({ initialTitle = '', initialContent = '', pos
         setLastSavedAt(new Date());
         setHasUnsavedChanges(false);
       } catch (error) {
-        console.error('Error auto-saving draft:', error);
-        // ここでユーザーに通知するか、エラー状態を設定することができます
-        // 例: setError('ドラフトの自動保存に失敗しました。');
+        console.error('ドラフトの自動保存中にエラーが発生しました:', error);
       }
     }
   }, 2000);
@@ -310,9 +308,12 @@ export default function PostEditor({ initialTitle = '', initialContent = '', pos
     };
   }, [hasUnsavedChanges]);
 
+  // タイトル変更ハンドラを更新
   const handleTitleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setTitle(e.target.value);
+    const newTitle = e.target.value;
+    setTitle(newTitle);
     setHasUnsavedChanges(true);
+    debouncedSaveDraft(newTitle, content);
   };
 
   const handleSaveDraft = async () => {
