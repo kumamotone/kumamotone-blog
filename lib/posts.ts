@@ -35,3 +35,34 @@ export async function getPostById(id: number): Promise<Post | null> {
 
   return data
 }
+
+export async function createPost(post: Omit<Post, 'id'>): Promise<Post | null> {
+  const { data, error } = await supabase
+    .from('posts')
+    .insert(post)
+    .select()
+    .single()
+
+  if (error) {
+    console.error('Error creating post:', error)
+    return null
+  }
+
+  return data
+}
+
+export async function updatePost(id: number, post: Partial<Post>): Promise<Post | null> {
+  const { data, error } = await supabase
+    .from('posts')
+    .update(post)
+    .eq('id', id)
+    .select()
+    .single()
+
+  if (error) {
+    console.error('Error updating post:', error)
+    return null
+  }
+
+  return data
+}
