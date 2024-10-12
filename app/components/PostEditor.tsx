@@ -1,6 +1,6 @@
 'use client'
 
-import { createPost, deleteDraft, getDraft, saveDraft, updatePost } from '@/lib/posts'
+import { createPost, deleteDraft, getDraft, saveDraft } from '@/lib/posts'
 import { uploadImage } from '@/lib/supabase'
 import { User } from '@supabase/supabase-js'
 import { Node, mergeAttributes } from '@tiptap/core'
@@ -8,10 +8,11 @@ import CodeBlock from '@tiptap/extension-code-block'
 import Image from '@tiptap/extension-image'
 import Link from '@tiptap/extension-link'
 import Placeholder from '@tiptap/extension-placeholder'
-import { useEditor, EditorContent } from '@tiptap/react'
+import { EditorContent, useEditor } from '@tiptap/react'
 import StarterKit from '@tiptap/starter-kit'
 import { useRouter } from 'next/navigation'
-import React, { useCallback, useEffect, useState } from 'react'
+import { EditorView } from 'prosemirror-view'
+import React, { useEffect, useState } from 'react'
 
 const CustomLink = Link.extend({
   inclusive: false,
@@ -177,7 +178,7 @@ export default function PostEditor({ initialTitle = '', initialContent = '', pos
         placeholder: 'ここに記事を書いてください...',
       }),
     ],
-    content: initialContent || '', // 初期コンテンツが空の場合は空文字列を設定
+    content: initialContent || '',
     editorProps: {
       attributes: {
         class: 'prose prose-sm sm:prose lg:prose-lg xl:prose-2xl mx-auto focus:outline-none',
@@ -194,7 +195,7 @@ export default function PostEditor({ initialTitle = '', initialContent = '', pos
         }
         return false;
       },
-      handlePaste: (view, event, slice) => {
+      handlePaste: (view, event) => {
         const items = event.clipboardData?.items;
         if (items) {
           for (let i = 0; i < items.length; i++) {
@@ -212,9 +213,8 @@ export default function PostEditor({ initialTitle = '', initialContent = '', pos
         return false;
       },
     },
-    onUpdate: ({ editor }) => {
-      const content = editor.getHTML();
-      // ここでリアルタイムプレビューの更新や自動保存の処理を行うことができます
+    onUpdate: () => {
+      // 自動保存などの処理をここに追加できます
     },
   });
 
@@ -275,7 +275,7 @@ export default function PostEditor({ initialTitle = '', initialContent = '', pos
     }
   };
 
-  const handleImageUpload = async (file: File, view?: any, event?: DragEvent) => {
+  const handleImageUpload = async (file: File, view: EditorView, event?: DragEvent) => {
     const imageUrl = await uploadImage(file);
     if (imageUrl && editor) {
       if (view && event) {
