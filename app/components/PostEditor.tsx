@@ -384,7 +384,10 @@ export default function PostEditor({ initialTitle = '', initialContent = '', pos
         <div>
           <label htmlFor="content" className="block mb-2">内容</label>
           <div className="border border-gray-300 rounded p-2 min-h-[300px]">
-            <EditorContent editor={editor} className="prose-headings:font-bold prose-h1:text-2xl prose-h2:text-xl prose-h3:text-lg prose-h4:text-base prose-h5:text-sm prose-h6:text-xs" />
+            <EditorContent 
+              editor={editor} 
+              className="prose-headings:font-bold prose-h1:text-2xl prose-h2:text-xl prose-h3:text-lg prose-h4:text-base prose-h5:text-sm prose-h6:text-xs prose-code:bg-gray-100 prose-code:text-red-500 prose-pre:bg-gray-800 prose-pre:text-gray-100 prose-pre:p-4 prose-pre:rounded"
+            />
           </div>
         </div>
         <div className="flex justify-between items-center mt-4">
@@ -441,6 +444,25 @@ export default function PostEditor({ initialTitle = '', initialContent = '', pos
           border: 2px solid white;
           border-radius: 50%;
           cursor: se-resize;
+        }
+        .ProseMirror pre {
+          background-color: #1a202c;
+          color: #e2e8f0;
+          padding: 1rem;
+          border-radius: 0.375rem;
+        }
+        .ProseMirror pre code {
+          color: inherit;
+          padding: 0;
+          background: none;
+          font-size: 0.875em;
+        }
+        .ProseMirror p code {
+          background-color: #f1f5f9;
+          color: #ef4444;
+          padding: 0.2em 0.4em;
+          border-radius: 0.25rem;
+          font-size: 0.875em;
         }
       `}</style>
       <div className="fixed bottom-4 right-4 bg-gray-800 text-white px-3 py-1 rounded-full shadow-lg">
