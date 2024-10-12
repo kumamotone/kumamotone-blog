@@ -210,7 +210,7 @@ export default function PostEditor({ initialTitle = '', initialContent = '', pos
         placeholder: 'ここに記事を書いてください...',
       }),
     ],
-    content: content,
+    content: initialContent, // 初期コンテンツを直接ここで設定
     editorProps: {
       attributes: {
         class: 'prose prose-sm sm:prose lg:prose-lg xl:prose-2xl mx-auto focus:outline-none',
@@ -253,8 +253,13 @@ export default function PostEditor({ initialTitle = '', initialContent = '', pos
       // 文字数の更新をトリガー
       getWordCount();
     },
-    immediatelyRender: false, // この行を追加
-  });
+  }, [initialContent]); // initialContentが変更されたときにエディタを再作成
+
+  useEffect(() => {
+    if (editor && !editor.isDestroyed) {
+      editor.commands.setContent(initialContent);
+    }
+  }, [editor, initialContent]);
 
   useEffect(() => {
     async function loadDraft() {
@@ -265,23 +270,17 @@ export default function PostEditor({ initialTitle = '', initialContent = '', pos
             const latestDraft = drafts[0];
             setTitle(latestDraft.title);
             setContent(latestDraft.content);
-            if (editor) {
+            if (editor && !editor.isDestroyed) {
               editor.commands.setContent(latestDraft.content);
             }
           }
         } catch (error) {
-          console.error('ドラフトの読み込み中にエラーが生しました:', error);
+          console.error('ドラフトの読み込み中にエラーが発生しました:', error);
         }
       }
     }
     loadDraft();
   }, [user, postId, editor]);
-
-  useEffect(() => {
-    if (editor && content) {
-      editor.commands.setContent(content);
-    }
-  }, [editor, content]);
 
   useEffect(() => {
     const handleBeforeUnload = (e: BeforeUnloadEvent) => {
@@ -506,7 +505,7 @@ export default function PostEditor({ initialTitle = '', initialContent = '', pos
                   className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600 flex items-center"
                 >
                   <FiTrash2 className="mr-2" />
-                  下書き削除
+                  下書き削��
                 </button>
               </>
             )}
