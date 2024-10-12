@@ -1,49 +1,24 @@
-'use client'
+import './globals.css'
+import type { Metadata } from 'next'
+import { Inter } from 'next/font/google'
 
-import { useState, useEffect } from "react";
-import Link from "next/link";
-import { getCurrentUser, signOut } from "@/lib/supabase";
-import { User } from "@supabase/supabase-js";
-import "./globals.css";
-import 'react-quill/dist/quill.snow.css';  // この行を追加
+const inter = Inter({ subsets: ['latin'] })
+
+export const metadata: Metadata = {
+  title: '山蔭の熊小屋',
+  description: '山蔭の熊小屋のブログサイトです。',
+}
 
 export default function RootLayout({
   children,
 }: {
-  children: React.ReactNode;
+  children: React.ReactNode
 }) {
-  const [user, setUser] = useState<User | null>(null);
-
-  useEffect(() => {
-    async function loadUser() {
-      const currentUser = await getCurrentUser();
-      console.log('Current user:', currentUser);  // デバッグ情報
-      setUser(currentUser);
-    }
-    loadUser();
-  }, []);
-
-  const handleLogout = async () => {
-    await signOut();
-    setUser(null);
-    window.location.href = '/';
-  };
-
   return (
-    <html lang="en">
-      <body>
-        <nav className="bg-gray-800 text-white p-4">
-          <div className="container mx-auto flex justify-between items-center">
-            <Link href="/" className="text-xl font-bold">My Blog</Link>
-            {user && (
-              <button onClick={handleLogout} className="text-white hover:underline">
-                ログアウト
-              </button>
-            )}
-          </div>
-        </nav>
-        {children}
+    <html lang="ja">
+      <body className={inter.className}>
+        <main>{children}</main>
       </body>
     </html>
-  );
+  )
 }

@@ -224,7 +224,7 @@ export default function PostEditor({ initialTitle = '', initialContent = '', pos
 
   return (
     <div className="container mx-auto px-4 py-8 max-w-4xl">
-      <h1 className="text-3xl font-bold mb-6">{postId ? '記事を編集' : '新しい記事を作成'}</h1>
+      <h1 className="text-3xl font-bold mb-6">{postId ? '記事編集' : '新しい記事を作成'}</h1>
       {error && <p className="text-red-500 mb-4">{error}</p>}
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
@@ -256,7 +256,7 @@ export default function PostEditor({ initialTitle = '', initialContent = '', pos
             </button>
           )}
           <button type="submit" className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">
-            {postId ? '更新する' : '投稿する'}
+            {postId ? '更新する' : '��稿する'}
           </button>
         </div>
       </form>

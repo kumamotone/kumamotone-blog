@@ -30,7 +30,7 @@ export default function Home() {
 
   const router = useRouter();
   const searchParams = useSearchParams();
-  const currentPage = Number(searchParams.get('page')) || 1;
+  const currentPage = Number(searchParams?.get('page')) || 1;
 
   useEffect(() => {
     async function loadData() {
@@ -58,10 +58,16 @@ export default function Home() {
     router.push(`/?page=${newPage}`);
   };
 
+  const handleTweet = (post: Post) => {
+    const tweetText = encodeURIComponent(`${post.title} | 山蔭の熊小屋`);
+    const tweetUrl = encodeURIComponent(`${window.location.origin}/blog/${post.id}`);
+    window.open(`https://twitter.com/intent/tweet?text=${tweetText}&url=${tweetUrl}`, '_blank');
+  };
+
   if (isLoading) {
     return (
       <div className="container mx-auto px-4 py-8 max-w-4xl">
-        <h1 className="text-4xl font-bold mb-8 text-center">My Blog</h1>
+        <h1 className="text-4xl font-bold mb-8 text-center">山蔭の熊小屋</h1>
         <div className="space-y-8">
           {[...Array(5)].map((_, i) => (
             <LoadingSkeleton key={i} />
@@ -73,7 +79,7 @@ export default function Home() {
 
   return (
     <div className="container mx-auto px-4 py-8 max-w-4xl min-h-screen flex flex-col">
-      <h1 className="text-4xl font-bold mb-8 text-center">My Blog</h1>
+      <h1 className="text-4xl font-bold mb-8 text-center">山蔭の熊小屋</h1>
       {user && (
         <div className="mb-8 flex justify-end">
           <Link href="/blog/new" className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 transition duration-300">
@@ -109,17 +115,23 @@ export default function Home() {
                 }}
               />
               {user && (
-                <div className="mt-4">
+                <div className="mt-4 flex items-center space-x-4">
                   <Link href={`/blog/edit/${post.id}`} className="text-gray-500 hover:underline">
                     編集
                   </Link>
+                  <button
+                    onClick={() => handleTweet(post)}
+                    className="text-blue-400 hover:text-blue-600"
+                  >
+                    X に投稿
+                  </button>
                 </div>
               )}
             </li>
           ))}
         </ul>
       )}
-      <footer className="mt-8 py-4 border-t">
+      <footer className="mt-8 pt-4">
         <nav className="flex justify-center items-center space-x-4">
           {currentPage > 1 && (
             <button

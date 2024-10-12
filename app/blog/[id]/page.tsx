@@ -1,12 +1,12 @@
 'use client'
 
-import { useState, useEffect } from 'react';
-import Link from "next/link";
-import { useRouter } from 'next/navigation';
-import { getPostById, deletePost, Post } from "@/lib/posts";
-import { getCurrentUser, isAdminUser } from "@/lib/supabase";
-import { User } from "@supabase/supabase-js";
-import DOMPurify from 'dompurify';
+import { deletePost, getPostById, Post } from "@/lib/posts"
+import { getCurrentUser, isAdminUser } from "@/lib/supabase"
+import { User } from "@supabase/supabase-js"
+import DOMPurify from 'dompurify'
+import Link from "next/link"
+import { useRouter } from 'next/navigation'
+import { useEffect, useState } from 'react'
 
 export default function BlogPost({ params }: { params: { id: string } }) {
   const [post, setPost] = useState<Post | null>(null);
@@ -63,7 +63,8 @@ export default function BlogPost({ params }: { params: { id: string } }) {
 
   return (
     <div className="container mx-auto px-4 py-8">
-      <h1 className="text-3xl font-bold mb-4">{post.title}</h1>
+      <h1 className="text-4xl font-bold mb-8 text-center">山蔭の熊小屋</h1>
+      <h2 className="text-3xl font-bold mb-4">{post.title}</h2>
       <p className="text-gray-500 mb-4">{post.date}</p>
       <div 
         className="mb-8 prose prose-lg max-w-none"
