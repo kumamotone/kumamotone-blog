@@ -66,3 +66,17 @@ export async function updatePost(id: number, post: Partial<Post>): Promise<Post 
 
   return data
 }
+
+export async function deletePost(id: number): Promise<boolean> {
+  const { error } = await supabase
+    .from('posts')
+    .delete()
+    .eq('id', id)
+
+  if (error) {
+    console.error('Error deleting post:', error)
+    return false
+  }
+
+  return true
+}
