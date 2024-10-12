@@ -1,7 +1,7 @@
-import React from 'react'
-import Link from 'next/link'
 import { getCurrentUser } from '@/lib/supabase'
 import { User } from '@supabase/supabase-js'
+import Link from 'next/link'
+import React from 'react'
 
 type LayoutProps = {
   children: React.ReactNode
@@ -25,7 +25,7 @@ export default function Layout({ children }: LayoutProps) {
       </main>
       <footer className="bg-gray-800 text-white py-4">
         <div className="container mx-auto px-4 flex justify-between items-center">
-          <p>&copy; 2024 山蔭の熊小屋</p>
+          <p>&copy; 2024 熊小屋</p>
           <div>
             {user ? (
               <>

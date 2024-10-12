@@ -7,7 +7,7 @@ import DOMPurify from 'dompurify'
 import Link from "next/link"
 import { useRouter, useSearchParams } from "next/navigation"
 import React, { useEffect, useState } from 'react'
-import { FiEdit, FiTwitter, FiArrowUp } from 'react-icons/fi'
+import { FiArrowUp, FiEdit, FiTwitter } from 'react-icons/fi'
 
 function LoadingSkeleton() {
   return (
@@ -60,7 +60,7 @@ export default function Home() {
   };
 
   const handleTweet = (post: Post) => {
-    const tweetText = encodeURIComponent(`${post.title} | 山蔭の熊小屋`);
+    const tweetText = encodeURIComponent(`${post.title} | 熊小屋`);
     const tweetUrl = encodeURIComponent(`${window.location.origin}/blog/${post.id}`);
     window.open(`https://twitter.com/intent/tweet?text=${tweetText}&url=${tweetUrl}`, '_blank');
   };
@@ -97,7 +97,7 @@ export default function Home() {
   if (isLoading) {
     return (
       <div>
-        <h1 className="text-4xl font-bold mb-8 text-green-800">山蔭の熊小屋</h1>
+        <h1 className="text-4xl font-bold mb-8 text-green-800">熊小屋</h1>
         <div className="space-y-8">
           {[...Array(5)].map((_, i) => (
             <LoadingSkeleton key={i} />
@@ -109,14 +109,29 @@ export default function Home() {
 
   return (
     <div className="pb-12">
-      <div className="flex justify-between items-center mb-8">
-        <h1 className="text-4xl font-bold text-green-800">山蔭の熊小屋</h1>
-        {user && (
+      <div className="mb-8">
+        <h1 className="text-4xl font-bold text-green-800 mb-2">
+          熊小屋
+        </h1>
+        <p className="text-lg text-gray-600 mb-4">I love tech and pure blogs.</p>
+        <div className="flex space-x-4 text-sm text-gray-600">
+          <a href="https://twitter.com/kumamo_tone" target="_blank" rel="noopener noreferrer" className="flex items-center hover:text-green-600">
+            <FiTwitter className="mr-1" />
+            @kumamo_tone
+          </a>
+          <a href="https://kuma.dev/" target="_blank" rel="noopener noreferrer" className="flex items-center hover:text-green-600">
+            <span className="mr-1" role="img" aria-label="ホームページ">🏠</span>
+            https://kuma.dev/
+          </a>
+        </div>
+      </div>
+      {user && (
+        <div className="mb-8">
           <Link href="/blog/new" className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 transition duration-300">
             新しい記事を作成
           </Link>
-        )}
-      </div>
+        </div>
+      )}
       {blogPosts.length === 0 ? (
         <p className="text-gray-600">記事がありません。</p>
       ) : (

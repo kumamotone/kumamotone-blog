@@ -5,12 +5,12 @@ export const runtime = 'edge'
 
 export async function GET(request: NextRequest) {
   const { searchParams } = request.nextUrl
-  const title = searchParams.get('title') ?? '山蔭の熊小屋'
+  const title = searchParams.get('title') ?? '熊小屋'
 
   return new ImageResponse(
     (
       <div className="flex h-full w-full flex-col items-center justify-center bg-white text-4xl font-semibold">
-        <div className="mt-10">山蔭の熊小屋</div>
+        <div className="mt-10">熊小屋</div>
         <div className="mt-10">{title}</div>
       </div>
     ),

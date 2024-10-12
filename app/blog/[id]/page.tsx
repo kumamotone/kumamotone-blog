@@ -5,10 +5,10 @@ import { getCurrentUser } from "@/lib/supabase"
 import { User } from "@supabase/supabase-js"
 import DOMPurify from 'dompurify'
 import Link from "next/link"
-import { useEffect, useState, useCallback, useMemo } from 'react'
 import Prism from 'prismjs'
 import 'prismjs/components/prism-javascript'
 import 'prismjs/components/prism-typescript'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 
 export default function BlogPost({ params }: { params: { id: string } }) {
   const [post, setPost] = useState<Post | null>(null);
@@ -49,7 +49,7 @@ export default function BlogPost({ params }: { params: { id: string } }) {
   }, [post]);
 
   const handleTweet = useCallback((post: Post) => {
-    const tweetText = encodeURIComponent(`${post.title} | 山蔭の熊小屋`);
+    const tweetText = encodeURIComponent(`${post.title} | 熊小屋`);
     const tweetUrl = encodeURIComponent(`${window.location.origin}/blog/${post.id}`);
     window.open(`https://twitter.com/intent/tweet?text=${tweetText}&url=${tweetUrl}`, '_blank');
   }, []);

@@ -6,15 +6,15 @@ const inter = Inter({ subsets: ['latin'] })
 
 export const metadata: Metadata = {
   title: {
-    default: '山蔭の熊小屋',
-    template: '%s | 山蔭の熊小屋',
+    default: '熊小屋',
+    template: '%s | 熊小屋',
   },
-  description: '山蔭の熊小屋のブログサイトです。技術や日常についての記事を書いています。',
+  description: '熊小屋のブログサイトです。技術や日常についての記事を書いています。',
   openGraph: {
-    title: '山蔭の熊小屋',
-    description: '山蔭の熊小屋のブログサイトです。技術や日常についての記事を書いています。',
+    title: '熊小屋',
+    description: '熊小屋のブログサイトです。技術や日常についての記事を書いています。',
     url: 'https://your-domain.com',
-    siteName: '山蔭の熊小屋',
+    siteName: '熊小屋',
     images: [
       {
         url: 'https://your-domain.com/og-image.jpg',
@@ -27,8 +27,8 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: 'summary_large_image',
-    title: '山蔭の熊小屋',
-    description: '山蔭の熊小屋のブログサイトです。技術や日常についての記事を書いています。',
+    title: '熊小屋',
+    description: '熊小屋のブログサイトです。技術や日常についての記事を書いています。',
     creator: '@your_twitter_handle',
     images: ['https://your-domain.com/twitter-image.jpg'],
   },
