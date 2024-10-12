@@ -9,6 +9,7 @@ import Prism from 'prismjs'
 import 'prismjs/components/prism-javascript'
 import 'prismjs/components/prism-typescript'
 import { useCallback, useEffect, useMemo, useState } from 'react'
+import { FiArrowLeft, FiArrowRight, FiEdit, FiHome, FiTwitter } from 'react-icons/fi'
 
 export default function BlogPost({ params }: { params: { id: string } }) {
   const [post, setPost] = useState<Post | null>(null);
@@ -62,76 +63,69 @@ export default function BlogPost({ params }: { params: { id: string } }) {
   }, [post]);
 
   if (isLoading) {
-    return <div>記事を読み込んでいます...</div>;
+    return <div className="text-center py-8">記事を読み込んでいます...</div>;
   }
 
   if (error) {
-    return <div className="text-red-500">{error}</div>;
+    return <div className="text-red-500 text-center py-8">{error}</div>;
   }
 
   if (!post) {
-    return <div>記事が見つかりません。</div>;
+    return <div className="text-center py-8">記事が見つかりません。</div>;
   }
 
   return (
-    <div>
-      <nav className="flex justify-between items-center mb-4">
-        {prevPost && (
-          <Link href={`/blog/${prevPost.id}`} className="text-green-600 hover:underline">
-            ← 前の記事
-          </Link>
-        )}
-        <Link href="/" className="text-green-600 hover:underline">
+    <div className="container mx-auto px-4 py-8 max-w-4xl">
+      <div className="mb-8">
+        <Link href="/" className="text-green-600 hover:underline flex items-center">
+          <FiHome className="mr-2" />
           ホームに戻る
         </Link>
-        {nextPost && (
-          <Link href={`/blog/${nextPost.id}`} className="text-green-600 hover:underline">
-            次の記事 →
-          </Link>
-        )}
-      </nav>
-
-      <h1 className="text-4xl font-bold mb-4 text-green-800">{post.title}</h1>
-      <p className="text-gray-500 text-sm mb-4">
-        {new Date(post.created_at).toLocaleString('ja-JP', {
-          year: 'numeric',
-          month: 'long',
-          day: 'numeric',
-          hour: '2-digit',
-          minute: '2-digit'
-        })}
-      </p>
-
-      <article className="prose prose-lg max-w-none mb-8">
-        <div dangerouslySetInnerHTML={{ __html: sanitizedContent }} />
-      </article>
-
-      <div className="flex justify-between items-center mt-8">
-        {user && (
-          <Link href={`/blog/edit/${post.id}`} className="text-green-600 hover:underline">
-            編集
-          </Link>
-        )}
-        <button
-          onClick={() => handleTweet(post)}
-          className="text-blue-500 hover:text-blue-600"
-        >
-          X に投稿
-        </button>
-        <a href="#top" className="text-green-600 hover:underline">
-          ページ上部へ
-        </a>
       </div>
+
+      <article className="mb-12">
+        <h1 className="text-4xl font-bold mb-4 text-green-800">{post.title}</h1>
+        <p className="text-gray-500 text-sm mb-4">
+          {new Date(post.created_at).toLocaleString('ja-JP', {
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit'
+          })}
+        </p>
+        <div 
+          className="text-gray-700 prose prose-green max-w-none"
+          dangerouslySetInnerHTML={{ __html: sanitizedContent }}
+        />
+        {user && (
+          <div className="mt-6 flex items-center space-x-4">
+            <Link href={`/blog/edit/${post.id}`} className="text-green-600 hover:underline flex items-center">
+              <FiEdit className="mr-2" />
+              編集
+            </Link>
+            <button
+              onClick={() => handleTweet(post)}
+              className="text-blue-500 hover:text-blue-600 flex items-center"
+            >
+              <FiTwitter className="mr-2" />
+              X に投稿
+            </button>
+          </div>
+        )}
+      </article>
 
       <nav className="flex justify-between items-center mt-8">
         {prevPost && (
-          <Link href={`/blog/${prevPost.id}`} className="text-green-600 hover:underline">
-            ← {prevPost.title}
+          <Link href={`/blog/${prevPost.id}`} className="text-green-600 hover:underline flex items-center">
+            <FiArrowLeft className="mr-2" />
+            {prevPost.title}
           </Link>
         )}
         {nextPost && (
-          <Link href={`/blog/${nextPost.id}`} className="text-green-600 hover:underline">
-            {nextPost.title} →
+          <Link href={`/blog/${nextPost.id}`} className="text-green-600 hover:underline flex items-center ml-auto">
+            {nextPost.title}
+            <FiArrowRight className="ml-2" />
           </Link>
         )}
       </nav>
