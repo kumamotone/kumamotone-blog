@@ -14,8 +14,8 @@ import debounce from 'lodash/debounce'
 import NextLink from 'next/link'
 import { useRouter } from 'next/navigation'
 import { EditorView } from 'prosemirror-view'
-import React, { useEffect, useState } from 'react'
-import { FiList, FiSave, FiEdit, FiHome, FiSend } from 'react-icons/fi'
+import React, { useCallback, useEffect, useState } from 'react'
+import { FiEdit, FiList, FiSave, FiSend } from 'react-icons/fi'
 
 const CustomLink = Link.extend({
   inclusive: false,
@@ -184,7 +184,7 @@ export default function PostEditor({ initialTitle = '', initialContent = '', pos
         console.error('ドラフトの自動保存中にエラーが発生しました:', error);
       }
     }
-  }, 2000);
+  }, 100);
 
   const editor = useEditor({
     extensions: [
@@ -242,6 +242,8 @@ export default function PostEditor({ initialTitle = '', initialContent = '', pos
       setContent(newContent);
       setHasUnsavedChanges(true);
       debouncedSaveDraft(title, newContent);
+      // 文字数の更新をトリガー
+      getWordCount();
     },
     immediatelyRender: false, // この行を追加
   });
@@ -379,6 +381,14 @@ export default function PostEditor({ initialTitle = '', initialContent = '', pos
     }
   };
 
+  const getWordCount = useCallback(() => {
+    if (editor) {
+      const text = editor.state.doc.textContent
+      return text.length
+    }
+    return 0
+  }, [editor])
+
   return (
     <div className="container mx-auto px-4 py-8 max-w-4xl">
       <div className="flex justify-between items-center mb-6">
@@ -469,6 +479,9 @@ export default function PostEditor({ initialTitle = '', initialContent = '', pos
           cursor: se-resize;
         }
       `}</style>
+      <div className="fixed bottom-4 right-4 bg-gray-800 text-white px-3 py-1 rounded-full shadow-lg">
+        {getWordCount()} 文字
+      </div>
     </div>
   );
 }
