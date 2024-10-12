@@ -9,6 +9,43 @@ import { useEffect, useState } from 'react'
 import Prism from 'prismjs'
 import 'prismjs/components/prism-javascript'
 import 'prismjs/components/prism-typescript'
+import { Metadata } from 'next'
+
+export async function generateMetadata({ params }: { params: { id: string } }): Promise<Metadata> {
+  const post = await getPostById(parseInt(params.id))
+  if (!post) {
+    return {
+      title: '記事が見つかりません',
+    }
+  }
+
+  const ogImageUrl = `https://your-domain.com/api/og?title=${encodeURIComponent(post.title)}`
+
+  return {
+    title: post.title,
+    description: post.content.substring(0, 160), // 最初の160文字を説明文として使用
+    openGraph: {
+      title: post.title,
+      description: post.content.substring(0, 160),
+      url: `https://your-domain.com/blog/${post.id}`,
+      type: 'article',
+      publishedTime: post.created_at,
+      images: [
+        {
+          url: ogImageUrl,
+          width: 1200,
+          height: 630,
+        },
+      ],
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title: post.title,
+      description: post.content.substring(0, 160),
+      images: [ogImageUrl],
+    },
+  }
+}
 
 export default function BlogPost({ params }: { params: { id: string } }) {
   const [post, setPost] = useState<Post | null>(null);
