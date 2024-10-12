@@ -1,14 +1,60 @@
+'use client'
+
+import { useState, useEffect } from 'react';
 import Link from "next/link";
 import { getAllPosts } from "@/lib/posts";
+import { getCurrentUser, signOut } from "@/lib/supabase";
+import { User } from "@supabase/supabase-js";
 
-export default async function Home() {
-  const posts = await getAllPosts();
+export default function Home() {
+  const [posts, setPosts] = useState([]);
+  const [user, setUser] = useState<User | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    async function loadData() {
+      const [fetchedPosts, currentUser] = await Promise.all([
+        getAllPosts(),
+        getCurrentUser()
+      ]);
+      setPosts(fetchedPosts);
+      setUser(currentUser);
+      setIsLoading(false);
+    }
+    loadData();
+  }, []);
+
+  const handleLogout = async () => {
+    await signOut();
+    setUser(null);
+  };
+
+  if (isLoading) {
+    return <div className="flex justify-center items-center h-screen">Loading...</div>;
+  }
 
   return (
     <div className="min-h-screen bg-gray-100">
       <header className="bg-white shadow">
-        <div className="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
+        <div className="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8 flex justify-between items-center">
           <h1 className="text-3xl font-bold text-gray-900">My Blog</h1>
+          <div>
+            {user ? (
+              <div className="flex items-center space-x-4">
+                <span>ようこそ、{user.email}さん！</span>
+                <button
+                  onClick={handleLogout}
+                  className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600 transition duration-300"
+                >
+                  ログアウト
+                </button>
+              </div>
+            ) : (
+              <Link href="/login" className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 transition duration-300">
+                ログイン
+              </Link>
+            )}
+          </div>
         </div>
       </header>
       <main className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
