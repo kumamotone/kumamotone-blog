@@ -174,3 +174,21 @@ export async function getPaginatedPosts(page: number, perPage: number = 5): Prom
 
   return { posts: data || [], total: count || 0 };
 }
+
+export async function getPreviousAndNextPost(currentId: number): Promise<{ prev: Post | null, next: Post | null }> {
+  const { data, error } = await supabase
+    .from('posts')
+    .select('id, title')
+    .order('created_at', { ascending: false });
+
+  if (error) {
+    console.error('Error fetching posts:', error);
+    return { prev: null, next: null };
+  }
+
+  const currentIndex = data.findIndex(post => post.id === currentId);
+  const prev = currentIndex < data.length - 1 ? data[currentIndex + 1] : null;
+  const next = currentIndex > 0 ? data[currentIndex - 1] : null;
+
+  return { prev, next };
+}
