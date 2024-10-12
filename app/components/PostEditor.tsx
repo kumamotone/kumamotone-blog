@@ -3,12 +3,11 @@
 import { createPost, deleteDraft, getDraft, saveDraft } from '@/lib/posts'
 import { uploadImage } from '@/lib/supabase'
 import { User } from '@supabase/supabase-js'
-import { Node, mergeAttributes } from '@tiptap/core'
 import CodeBlock from '@tiptap/extension-code-block'
 import Image from '@tiptap/extension-image'
 import Link from '@tiptap/extension-link'
 import Placeholder from '@tiptap/extension-placeholder'
-import { EditorContent, useEditor, NodeViewWrapper, NodeViewContent, ReactNodeViewRenderer } from '@tiptap/react'
+import { EditorContent, NodeViewContent, NodeViewWrapper, ReactNodeViewRenderer, useEditor } from '@tiptap/react'
 import StarterKit from '@tiptap/starter-kit'
 import debounce from 'lodash/debounce'
 import NextLink from 'next/link'
@@ -269,7 +268,7 @@ export default function PostEditor({ initialTitle = '', initialContent = '', pos
             }
           }
         } catch (error) {
-          console.error('ドラフトの読み込み中にエラーが���生しました:', error);
+          console.error('ドラフトの読み込み中にエラーが生しました:', error);
         }
       }
     }
@@ -352,16 +351,21 @@ export default function PostEditor({ initialTitle = '', initialContent = '', pos
         setIsSaving(true);
         if (onSubmit) {
           await onSubmit(title, editor.getHTML());
+          // 投稿成功後に下書きをクリア
+          await deleteDraft(user.id);
+          setHasUnsavedChanges(false);
+          localStorage.removeItem('draftTitle');
+          localStorage.removeItem('draftContent');
         } else {
           const newPost = await createPost({
             title: title,
             content: editor.getHTML(),
           });
           if (newPost) {
-            await deleteDraft(user.id); // 下書きを削除
+            await deleteDraft(user.id);
             setHasUnsavedChanges(false);
-            localStorage.removeItem('draftTitle'); // ローカルストレージから下書きタイトルを削除
-            localStorage.removeItem('draftContent'); // ローカルストレージから下書き内容を削除
+            localStorage.removeItem('draftTitle');
+            localStorage.removeItem('draftContent');
             router.push('/');
           }
         }

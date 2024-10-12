@@ -35,6 +35,9 @@ export default function NewPost() {
   const handleSubmit = async (title: string, content: string) => {
     const post = await createPost({ title, content });
     if (post) {
+      // 投稿成功後に下書きをクリア
+      localStorage.removeItem('draftTitle');
+      localStorage.removeItem('draftContent');
       router.push('/');
     }
   };
