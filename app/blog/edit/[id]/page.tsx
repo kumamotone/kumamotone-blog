@@ -1,20 +1,21 @@
 'use client'
 
-import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
-import { getCurrentUser } from '@/lib/supabase';
-import { getPostById } from '@/lib/posts';
-import PostEditor from '@/app/components/PostEditor';
+import { getPostById, Post, updatePost } from "@/lib/posts"
+import { getCurrentUser } from "@/lib/supabase"
+import { User } from "@supabase/supabase-js"
+import { useRouter } from "next/navigation"
+import { useEffect, useState } from "react"
+import PostEditor from "@/app/components/PostEditor"
 
 export default function EditPost({ params }: { params: { id: string } }) {
-  const [user, setUser] = useState(null);
-  const [post, setPost] = useState(null);
+  const [user, setUser] = useState<User | null>(null);
+  const [post, setPost] = useState<Post | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const router = useRouter();
-  const id = parseInt(params.id);
 
   useEffect(() => {
     async function loadData() {
+      const id = parseInt(params.id);
       const [currentUser, loadedPost] = await Promise.all([
         getCurrentUser(),
         getPostById(id)
@@ -22,20 +23,32 @@ export default function EditPost({ params }: { params: { id: string } }) {
       setUser(currentUser);
       setPost(loadedPost);
       setIsLoading(false);
-      if (!currentUser) {
-        router.push('/login');
-      }
     }
     loadData();
-  }, [id, router]);
+  }, [params.id]);
 
   if (isLoading) {
-    return <div className="flex justify-center items-center h-screen">Loading...</div>;
+    return <div>Loading...</div>;
   }
 
   if (!user || !post) {
-    return null;
+    return <div>記事が見つからないか、アクセス権限がありません。</div>;
   }
 
-  return <PostEditor user={user} initialTitle={post.title} initialContent={post.content} postId={id} />;
+  const handleSubmit = async (title: string, content: string) => {
+    const updatedPost = await updatePost(post.id, { title, content });
+    if (updatedPost) {
+      router.push(`/blog/${updatedPost.id}`);
+    }
+  };
+
+  return (
+    <PostEditor
+      initialTitle={post.title}
+      initialContent={post.content}
+      postId={post.id}
+      user={user}
+      onSubmit={handleSubmit}
+    />
+  );
 }

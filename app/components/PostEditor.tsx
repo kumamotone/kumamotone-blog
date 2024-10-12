@@ -8,7 +8,7 @@ import CodeBlock from '@tiptap/extension-code-block'
 import Image from '@tiptap/extension-image'
 import Link from '@tiptap/extension-link'
 import Placeholder from '@tiptap/extension-placeholder'
-import { EditorContent, useEditor } from '@tiptap/react'
+import { useEditor, EditorContent } from '@tiptap/react'
 import StarterKit from '@tiptap/starter-kit'
 import { useRouter } from 'next/navigation'
 import React, { useCallback, useEffect, useState } from 'react'
@@ -152,9 +152,10 @@ interface PostEditorProps {
   initialContent?: string;
   postId?: number;
   user: User | null;
+  onSubmit?: (title: string, content: string) => Promise<void>;
 }
 
-export default function PostEditor({ initialTitle = '', initialContent = '', postId, user }: PostEditorProps) {
+export default function PostEditor({ initialTitle = '', initialContent = '', postId, user, onSubmit }: PostEditorProps) {
   const [title, setTitle] = useState(initialTitle);
   const [error, setError] = useState('');
   const [isSaving, setIsSaving] = useState(false);
@@ -253,17 +254,21 @@ export default function PostEditor({ initialTitle = '', initialContent = '', pos
     if (user && editor) {
       try {
         setIsSaving(true);
-        const newPost = await createPost({
-          title: title,
-          content: editor.getHTML(),
-        });
-        if (newPost) {
-          await deleteDraft(user.id);
-          router.push('/'); // ホームページにリダイレクト
+        if (onSubmit) {
+          await onSubmit(title, editor.getHTML());
+        } else {
+          const newPost = await createPost({
+            title: title,
+            content: editor.getHTML(),
+          });
+          if (newPost) {
+            await deleteDraft(user.id);
+            router.push('/'); // ホームページにリダイレクト
+          }
         }
       } catch (error) {
-        console.error('Error creating post:', error);
-        setError('投稿の作成中にエラーが発生しました。');
+        console.error('Error creating/updating post:', error);
+        setError('投稿の作成/更新中にエラーが発生しました。');
       } finally {
         setIsSaving(false);
       }
