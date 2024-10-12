@@ -1,8 +1,8 @@
 import Link from "next/link";
 import { getAllPosts } from "@/lib/posts";
 
-export default function BlogList() {
-  const blogPosts = getAllPosts();
+export default async function BlogList() {
+  const blogPosts = await getAllPosts();
 
   return (
     <div className="container mx-auto px-4 py-8">

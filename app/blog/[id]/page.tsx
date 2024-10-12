@@ -1,8 +1,8 @@
 import Link from "next/link";
 import { getPostById } from "@/lib/posts";
 
-export default function BlogPost({ params }: { params: { id: string } }) {
-  const post = getPostById(parseInt(params.id));
+export default async function BlogPost({ params }: { params: { id: string } }) {
+  const post = await getPostById(parseInt(params.id));
 
   if (!post) {
     return <div>記事が見つかりません</div>;

@@ -1,7 +1,4 @@
-import fs from 'fs';
-import path from 'path';
-
-const postsDirectory = path.join(process.cwd(), 'data');
+import { supabase } from './supabase'
 
 export interface Post {
   id: number;
@@ -10,13 +7,31 @@ export interface Post {
   content: string;
 }
 
-export function getAllPosts(): Post[] {
-  const filePath = path.join(postsDirectory, 'posts.json');
-  const fileContents = fs.readFileSync(filePath, 'utf8');
-  return JSON.parse(fileContents);
+export async function getAllPosts(): Promise<Post[]> {
+  const { data, error } = await supabase
+    .from('posts')
+    .select('*')
+    .order('date', { ascending: false })
+
+  if (error) {
+    console.error('Error fetching posts:', error)
+    return []
+  }
+
+  return data || []
 }
 
-export function getPostById(id: number): Post | undefined {
-  const posts = getAllPosts();
-  return posts.find(post => post.id === id);
+export async function getPostById(id: number): Promise<Post | null> {
+  const { data, error } = await supabase
+    .from('posts')
+    .select('*')
+    .eq('id', id)
+    .single()
+
+  if (error) {
+    console.error('Error fetching post:', error)
+    return null
+  }
+
+  return data
 }
