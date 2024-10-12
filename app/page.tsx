@@ -2,12 +2,12 @@
 
 import { useState, useEffect } from 'react';
 import Link from "next/link";
-import { getAllPosts } from "@/lib/posts";
+import { getAllPosts, Post } from "@/lib/posts";
 import { getCurrentUser, signOut } from "@/lib/supabase";
 import { User } from "@supabase/supabase-js";
 
 export default function Home() {
-  const [posts, setPosts] = useState([]);
+  const [posts, setPosts] = useState<Post[]>([]);
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -57,30 +57,29 @@ export default function Home() {
           </div>
         </div>
       </header>
-      <main className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
+      <main className="max-w-4xl mx-auto py-6 sm:px-6 lg:px-8">
         <div className="px-4 py-6 sm:px-0">
           <h2 className="text-2xl font-semibold text-gray-900 mb-4">最新の記事</h2>
-          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-            {posts.slice(0, 6).map((post) => (
+          <div className="space-y-6">
+            {posts.slice(0, 5).map((post) => (
               <div key={post.id} className="bg-white overflow-hidden shadow rounded-lg">
                 <div className="p-6">
-                  <h3 className="text-lg font-medium text-gray-900 mb-2">
+                  <h3 className="text-xl font-medium text-gray-900 mb-2">
                     <Link href={`/blog/${post.id}`} className="hover:underline">
                       {post.title}
                     </Link>
                   </h3>
                   <p className="text-sm text-gray-500 mb-4">{post.date}</p>
-                  <p className="text-gray-700">
-                    {post.content.substring(0, 150)}...
-                  </p>
-                  <div className="mt-4">
-                    <Link
-                      href={`/blog/${post.id}`}
-                      className="text-blue-600 hover:underline"
-                    >
-                      続きを読む
-                    </Link>
+                  <div className="text-gray-700 mb-4">
+                    {post.content.substring(0, 200)}
+                    {post.content.length > 200 ? '...' : ''}
                   </div>
+                  <Link
+                    href={`/blog/${post.id}`}
+                    className="text-blue-600 hover:underline"
+                  >
+                    続きを読む
+                  </Link>
                 </div>
               </div>
             ))}
