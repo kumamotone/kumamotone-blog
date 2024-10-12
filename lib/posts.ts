@@ -7,6 +7,10 @@ export interface Post {
   content: string;
 }
 
+export interface Draft extends Omit<Post, 'id'> {
+  user_id: string;
+}
+
 export async function getAllPosts(): Promise<Post[]> {
   const { data, error } = await supabase
     .from('posts')
@@ -18,7 +22,6 @@ export async function getAllPosts(): Promise<Post[]> {
     return []
   }
 
-  console.log('Fetched posts:', data); // デバッグログを追加
   return data || []
 }
 
@@ -85,4 +88,67 @@ export async function deletePost(id: number): Promise<boolean> {
   }
 
   return true
+}
+
+export async function saveDraft(draft: Omit<Draft, 'date'>): Promise<Draft | null> {
+  const { data, error } = await supabase
+    .from('drafts')
+    .upsert({ 
+      ...draft, 
+      date: new Date().toISOString(),
+      user_id: (await supabase.auth.getUser()).data.user?.id
+    })
+    .select()
+    .single()
+
+  if (error) {
+    console.error('Error saving draft:', error)
+    return null
+  }
+
+  return data
+}
+
+export async function getDraft(user_id: string): Promise<Draft | null> {
+  const { data, error } = await supabase
+    .from('drafts')
+    .select('*')
+    .eq('user_id', user_id)
+    .single()
+
+  if (error) {
+    console.error('Error fetching draft:', error)
+    return null
+  }
+
+  return data
+}
+
+export async function deleteDraft(user_id: string): Promise<boolean> {
+  const { error } = await supabase
+    .from('drafts')
+    .delete()
+    .eq('user_id', user_id)
+
+  if (error) {
+    console.error('Error deleting draft:', error)
+    return false
+  }
+
+  return true
+}
+
+export async function getAllDrafts(user_id: string): Promise<Draft[]> {
+  const { data, error } = await supabase
+    .from('drafts')
+    .select('*')
+    .eq('user_id', user_id)
+    .order('date', { ascending: false })
+
+  if (error) {
+    console.error('Error fetching drafts:', error)
+    return []
+  }
+
+  return data || []
 }

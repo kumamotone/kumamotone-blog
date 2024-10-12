@@ -5,10 +5,11 @@ import Link from "next/link";
 import { useRouter } from 'next/navigation';
 import { getPostById, deletePost, Post } from "@/lib/posts";
 import { getCurrentUser } from "@/lib/supabase";
+import { User } from "@supabase/supabase-js";
 
 export default function BlogPost({ params }: { params: { id: string } }) {
   const [post, setPost] = useState<Post | null>(null);
-  const [user, setUser] = useState<any>(null);
+  const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isDeleting, setIsDeleting] = useState(false);
   const [showModal, setShowModal] = useState(false);
@@ -17,13 +18,18 @@ export default function BlogPost({ params }: { params: { id: string } }) {
 
   useEffect(() => {
     async function loadData() {
-      const [loadedPost, currentUser] = await Promise.all([
-        getPostById(id),
-        getCurrentUser()
-      ]);
-      setPost(loadedPost);
-      setUser(currentUser);
-      setIsLoading(false);
+      try {
+        const [loadedPost, currentUser] = await Promise.all([
+          getPostById(id),
+          getCurrentUser()
+        ]);
+        setPost(loadedPost);
+        setUser(currentUser);
+      } catch (error) {
+        console.error('Error loading data:', error);
+      } finally {
+        setIsLoading(false);
+      }
     }
     loadData();
   }, [id]);
@@ -39,14 +45,14 @@ export default function BlogPost({ params }: { params: { id: string } }) {
     }
   };
 
-  if (isLoading) return <div>読み込み中...</div>;
-  if (!post) return <div>記事が見つかりません</div>;
+  if (isLoading) return <div className="flex justify-center items-center h-screen">読み込み中...</div>;
+  if (!post) return <div className="flex justify-center items-center h-screen">記事が見つかりません</div>;
 
   return (
     <div className="container mx-auto px-4 py-8">
       <h1 className="text-3xl font-bold mb-4">{post.title}</h1>
       <p className="text-gray-500 mb-4">{post.date}</p>
-      <div className="mb-8">{post.content}</div>
+      <div className="mb-8" dangerouslySetInnerHTML={{ __html: post.content }}></div>
       <Link href="/blog" className="text-blue-500 hover:underline">
         記事一覧に戻る
       </Link>
