@@ -1,13 +1,9 @@
 import Link from "next/link";
-
-// 仮のブログ記事データ
-const blogPosts = [
-  { id: 1, title: "はじめてのブログ投稿", date: "2024-03-15" },
-  { id: 2, title: "Next.jsについて学んだこと", date: "2024-03-16" },
-  { id: 3, title: "TypeScriptの基本", date: "2024-03-17" },
-];
+import { getAllPosts } from "@/lib/posts";
 
 export default function BlogList() {
+  const blogPosts = getAllPosts();
+
   return (
     <div className="container mx-auto px-4 py-8">
       <h1 className="text-3xl font-bold mb-6">ブログ記事一覧</h1>
