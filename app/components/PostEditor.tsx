@@ -352,14 +352,16 @@ export default function PostEditor({ initialTitle = '', initialContent = '', pos
             content: editor.getHTML(),
           });
           if (newPost) {
-            await deleteDraft(user.id);
+            await deleteDraft(user.id); // 下書きを削除
             setHasUnsavedChanges(false);
+            localStorage.removeItem('draftTitle'); // ローカルストレージから下書きタイトルを削除
+            localStorage.removeItem('draftContent'); // ローカルストレージから下書き内容を削除
             router.push('/');
           }
         }
       } catch (error) {
-        console.error('Error creating/updating post:', error);
-        setError('投稿の作成/��新中にエラーが発生しました。');
+        console.error('投稿の作成/更新中にエラーが発生しました:', error);
+        setError('投稿の作成/更新中にエラーが発生しました。');
       } finally {
         setIsSaving(false);
       }

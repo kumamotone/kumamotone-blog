@@ -8,7 +8,6 @@ import Link from "next/link"
 import { useRouter, useSearchParams } from "next/navigation"
 import React, { useEffect, useState } from 'react'
 import { FiArrowUp, FiEdit, FiTwitter } from 'react-icons/fi'
-import { FaReact } from 'react-icons/fa'
 
 function LoadingSkeleton() {
   return (
