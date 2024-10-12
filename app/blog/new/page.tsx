@@ -3,7 +3,7 @@
 import PostEditor from '@/app/components/PostEditor'
 import { createPost } from '@/lib/posts'
 import { getCurrentUser } from '@/lib/supabase'
-import { User } from '@supabase/supabase-js'; // User型をインポートしてください
+import { User } from '@supabase/supabase-js';
 import { useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
 

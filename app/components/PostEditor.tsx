@@ -8,7 +8,7 @@ import CodeBlock from '@tiptap/extension-code-block'
 import Image from '@tiptap/extension-image'
 import Link from '@tiptap/extension-link'
 import Placeholder from '@tiptap/extension-placeholder'
-import { EditorContent, useEditor } from '@tiptap/react'
+import { EditorContent, useEditor, NodeViewWrapper, NodeViewContent, ReactNodeViewRenderer } from '@tiptap/react'
 import StarterKit from '@tiptap/starter-kit'
 import debounce from 'lodash/debounce'
 import NextLink from 'next/link'
@@ -31,7 +31,48 @@ const CustomLink = Link.extend({
   },
 });
 
+const CustomCodeBlockComponent = ({ node, updateAttributes }: any) => {
+  return (
+    <NodeViewWrapper className="code-block">
+      <select
+        contentEditable={false}
+        defaultValue={node.attrs.language || 'text'}
+        onChange={event => updateAttributes({ language: event.target.value })}
+        className="language-select"
+      >
+        <option value="text">プレーンテキスト</option>
+        <option value="javascript">JavaScript</option>
+        <option value="typescript">TypeScript</option>
+        <option value="html">HTML</option>
+        <option value="css">CSS</option>
+        <option value="python">Python</option>
+        <option value="ruby">Ruby</option>
+        <option value="go">Go</option>
+        <option value="rust">Rust</option>
+        <option value="java">Java</option>
+        <option value="c">C</option>
+        <option value="cpp">C++</option>
+        <option value="csharp">C#</option>
+        <option value="php">PHP</option>
+        <option value="swift">Swift</option>
+        <option value="kotlin">Kotlin</option>
+        <option value="sql">SQL</option>
+        <option value="shell">Shell</option>
+        <option value="markdown">Markdown</option>
+        <option value="json">JSON</option>
+        <option value="yaml">YAML</option>
+      </select>
+      <pre>
+        <NodeViewContent as="code" />
+      </pre>
+    </NodeViewWrapper>
+  )
+}
+
 const CustomCodeBlock = CodeBlock.extend({
+  addNodeView() {
+    return ReactNodeViewRenderer(CustomCodeBlockComponent)
+  },
   addKeyboardShortcuts() {
     return {
       'Mod-`': () => this.editor.commands.toggleCodeBlock(),
@@ -155,7 +196,11 @@ export default function PostEditor({ initialTitle = '', initialContent = '', pos
         codeBlock: false,
       }),
       CustomLink,
-      CustomCodeBlock,
+      CustomCodeBlock.configure({
+        HTMLAttributes: {
+          class: 'code-block',
+        },
+      }),
       ResizableImage.configure({
         inline: true,
         allowBase64: true,
@@ -224,7 +269,7 @@ export default function PostEditor({ initialTitle = '', initialContent = '', pos
             }
           }
         } catch (error) {
-          console.error('ドラフトの読み込み中にエラーが発生しました:', error);
+          console.error('ドラフトの読み込み中にエラーが���生しました:', error);
         }
       }
     }
@@ -463,6 +508,30 @@ export default function PostEditor({ initialTitle = '', initialContent = '', pos
           padding: 0.2em 0.4em;
           border-radius: 0.25rem;
           font-size: 0.875em;
+        }
+        .code-block {
+          position: relative;
+        }
+
+        .language-select {
+          position: absolute;
+          top: 0.5rem;
+          right: 0.5rem;
+          background-color: #2d3748;
+          color: #e2e8f0;
+          border: 1px solid #4a5568;
+          border-radius: 0.25rem;
+          padding: 0.25rem 0.5rem;
+          font-size: 0.75rem;
+          outline: none;
+        }
+
+        .language-select:focus {
+          border-color: #63b3ed;
+        }
+
+        .ProseMirror pre {
+          padding-top: 2.5rem;
         }
       `}</style>
       <div className="fixed bottom-4 right-4 bg-gray-800 text-white px-3 py-1 rounded-full shadow-lg">
