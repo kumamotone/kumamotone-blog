@@ -37,6 +37,17 @@ export async function signUpWithEmail(email: string, password: string) {
       throw error
     }
 
+    if (data.user) {
+      // ユーザーをusersテーブルに追加
+      const { error: insertError } = await supabase
+        .from('users')
+        .insert({ id: data.user.id, is_admin: false })
+
+      if (insertError) {
+        console.error('Error inserting user into users table:', insertError)
+      }
+    }
+
     return { data, error: null }
   } catch (error) {
     console.error('Error signing up:', error)

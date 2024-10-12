@@ -15,7 +15,7 @@ export async function getAllPosts(): Promise<Post[]> {
   const { data, error } = await supabase
     .from('posts')
     .select('*')
-    .order('date', { ascending: false })
+    .order('created_at', { ascending: false }) // dateの代わりにcreated_atを使用
 
   if (error) {
     console.error('Error fetching posts:', error)
@@ -41,14 +41,13 @@ export async function getPostById(id: number): Promise<Post | null> {
   return data
 }
 
-export async function createPost(post: Omit<Post, 'id' | 'date'>): Promise<Post | null> {
+export async function createPost(post: Omit<Post, 'id' | 'created_at'>): Promise<Post | null> {
   try {
     const { data, error } = await supabase
       .from('posts')
       .insert({ 
         ...post, 
-        date: new Date().toISOString().split('T')[0],
-        content: post.content || '' // コンテンツが未定義の場合は空文字列を設定
+        created_at: new Date().toISOString() // dateの代わりにcreated_atを使用
       })
       .select()
       .single()
@@ -156,4 +155,22 @@ export async function getAllDrafts(user_id: string): Promise<Draft[]> {
   }
 
   return data || []
+}
+
+export async function getPaginatedPosts(page: number, perPage: number = 5): Promise<{ posts: Post[], total: number }> {
+  const from = (page - 1) * perPage;
+  const to = from + perPage - 1;
+
+  const { data, error, count } = await supabase
+    .from('posts')
+    .select('*', { count: 'exact' })
+    .order('created_at', { ascending: false }) // dateの代わりにcreated_atを使用
+    .range(from, to);
+
+  if (error) {
+    console.error('Error fetching posts:', error);
+    return { posts: [], total: 0 };
+  }
+
+  return { posts: data || [], total: count || 0 };
 }

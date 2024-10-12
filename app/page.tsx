@@ -2,7 +2,8 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { getAllPosts, Post } from "@/lib/posts";
+import { useRouter, useSearchParams } from "next/navigation";
+import { getPaginatedPosts, Post } from "@/lib/posts";
 import { getCurrentUser } from "@/lib/supabase";
 import { User } from "@supabase/supabase-js";
 import DOMPurify from 'dompurify';
@@ -22,18 +23,25 @@ function LoadingSkeleton() {
 
 export default function Home() {
   const [user, setUser] = useState<User | null>(null);
-  const [posts, setPosts] = useState<Post[]>([]);
+  const [blogPosts, setBlogPosts] = useState<Post[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [totalPosts, setTotalPosts] = useState(0);
+  const postsPerPage = 5;
+
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const currentPage = Number(searchParams.get('page')) || 1;
 
   useEffect(() => {
     async function loadData() {
       try {
-        const [currentUser, fetchedPosts] = await Promise.all([
+        const [currentUser, { posts, total }] = await Promise.all([
           getCurrentUser(),
-          getAllPosts()
+          getPaginatedPosts(currentPage, postsPerPage)
         ]);
         setUser(currentUser);
-        setPosts(fetchedPosts.slice(0, 5)); // 最新の5件のみ表示
+        setBlogPosts(posts);
+        setTotalPosts(total);
       } catch (error) {
         console.error('Error loading data:', error);
       } finally {
@@ -42,7 +50,13 @@ export default function Home() {
     }
 
     loadData();
-  }, []);
+  }, [currentPage]);
+
+  const totalPages = Math.ceil(totalPosts / postsPerPage);
+
+  const handlePageChange = (newPage: number) => {
+    router.push(`/?page=${newPage}`);
+  };
 
   if (isLoading) {
     return (
@@ -58,7 +72,7 @@ export default function Home() {
   }
 
   return (
-    <div className="container mx-auto px-4 py-8 max-w-4xl">
+    <div className="container mx-auto px-4 py-8 max-w-4xl min-h-screen flex flex-col">
       <h1 className="text-4xl font-bold mb-8 text-center">My Blog</h1>
       {user && (
         <div className="mb-8 flex justify-end">
@@ -67,16 +81,24 @@ export default function Home() {
           </Link>
         </div>
       )}
-      {posts.length === 0 ? (
+      {blogPosts.length === 0 ? (
         <p className="text-center text-gray-500">記事がありません。</p>
       ) : (
-        <ul className="space-y-8">
-          {posts.map((post) => (
+        <ul className="space-y-8 flex-grow">
+          {blogPosts.map((post) => (
             <li key={post.id} className="border-b pb-8">
               <Link href={`/blog/${post.id}`} className="text-2xl font-semibold text-blue-600 hover:underline">
                 {post.title}
               </Link>
-              <p className="text-gray-500 text-sm mt-2">{post.date}</p>
+              <p className="text-gray-500 text-sm mt-2">
+                {new Date(post.created_at).toLocaleString('ja-JP', {
+                  year: 'numeric',
+                  month: 'long',
+                  day: 'numeric',
+                  hour: '2-digit',
+                  minute: '2-digit'
+                })}
+              </p>
               <div 
                 className="text-gray-700 mt-4 mb-4 prose"
                 dangerouslySetInnerHTML={{
@@ -86,20 +108,40 @@ export default function Home() {
                   })
                 }}
               />
-              <div className="mt-4">
-                <Link href={`/blog/${post.id}`} className="text-blue-500 hover:underline">
-                  続きを読む
-                </Link>
-              </div>
+              {user && (
+                <div className="mt-4">
+                  <Link href={`/blog/edit/${post.id}`} className="text-gray-500 hover:underline">
+                    編集
+                  </Link>
+                </div>
+              )}
             </li>
           ))}
         </ul>
       )}
-      <div className="mt-8 text-center">
-        <Link href="/blog" className="bg-blue-500 text-white px-6 py-2 rounded hover:bg-blue-600 transition duration-300">
-          すべての記事を見る
-        </Link>
-      </div>
+      <footer className="mt-8 py-4 border-t">
+        <nav className="flex justify-center items-center space-x-4">
+          {currentPage > 1 && (
+            <button
+              onClick={() => handlePageChange(currentPage - 1)}
+              className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 transition duration-300"
+            >
+              前へ
+            </button>
+          )}
+          <span className="px-4 py-2">
+            {currentPage} / {totalPages}
+          </span>
+          {currentPage < totalPages && (
+            <button
+              onClick={() => handlePageChange(currentPage + 1)}
+              className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 transition duration-300"
+            >
+              次へ
+            </button>
+          )}
+        </nav>
+      </footer>
     </div>
   );
 }
