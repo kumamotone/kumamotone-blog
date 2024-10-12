@@ -73,16 +73,76 @@ const Hashtag = Node.create({
   },
 });
 
-const CustomImage = Image.extend({
+const ResizableImage = Image.extend({
   addAttributes() {
     return {
       ...this.parent?.(),
       width: {
         default: null,
+        renderHTML: attributes => {
+          if (!attributes.width) {
+            return {}
+          }
+          return {
+            width: attributes.width,
+            style: `width: ${attributes.width}px`,
+          }
+        },
       },
-      height: {
-        default: null,
-      },
+    }
+  },
+
+  addNodeView() {
+    return ({ node, getPos, editor }) => {
+      const container = document.createElement('div')
+      container.classList.add('image-resizer')
+
+      const img = document.createElement('img')
+      img.src = node.attrs.src
+      img.alt = node.attrs.alt
+      img.width = node.attrs.width || 'auto'
+
+      container.append(img)
+
+      const handle = document.createElement('div')
+      handle.classList.add('resize-handle')
+      container.append(handle)
+
+      let startX: number
+      let startWidth: number
+
+      const onMouseDown = (e: MouseEvent) => {
+        e.preventDefault()
+        startX = e.pageX
+        startWidth = img.width
+        document.addEventListener('mousemove', onMouseMove)
+        document.addEventListener('mouseup', onMouseUp)
+      }
+
+      const onMouseMove = (e: MouseEvent) => {
+        const diff = e.pageX - startX
+        img.width = startWidth + diff
+      }
+
+      const onMouseUp = () => {
+        document.removeEventListener('mousemove', onMouseMove)
+        document.removeEventListener('mouseup', onMouseUp)
+        if (typeof getPos === 'function') {
+          editor.view.dispatch(editor.view.state.tr.setNodeMarkup(getPos(), undefined, {
+            ...node.attrs,
+            width: img.width,
+          }))
+        }
+      }
+
+      handle.addEventListener('mousedown', onMouseDown)
+
+      return {
+        dom: container,
+        destroy: () => {
+          handle.removeEventListener('mousedown', onMouseDown)
+        },
+      }
     }
   },
 });
@@ -108,7 +168,7 @@ export default function PostEditor({ initialTitle = '', initialContent = '', pos
       CustomLink,
       CustomCodeBlock,
       Hashtag,
-      CustomImage.configure({
+      ResizableImage.configure({
         inline: true,
         allowBase64: true,
       }),
@@ -267,6 +327,23 @@ export default function PostEditor({ initialTitle = '', initialContent = '', pos
           </button>
         </div>
       </form>
+      <style jsx global>{`
+        .image-resizer {
+          display: inline-block;
+          position: relative;
+        }
+        .resize-handle {
+          position: absolute;
+          right: -6px;
+          bottom: -6px;
+          width: 12px;
+          height: 12px;
+          background-color: #1a202c;
+          border: 2px solid white;
+          border-radius: 50%;
+          cursor: se-resize;
+        }
+      `}</style>
     </div>
   );
 }
