@@ -5,6 +5,7 @@ import Link from "next/link";
 import { getCurrentUser, signOut } from "@/lib/supabase";
 import { User } from "@supabase/supabase-js";
 import "./globals.css";
+import 'react-quill/dist/quill.snow.css';  // この行を追加
 
 export default function RootLayout({
   children,

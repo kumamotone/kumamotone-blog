@@ -75,3 +75,24 @@ export async function isAdminUser(user: User | null): Promise<boolean> {
 
   return data?.is_admin || false;
 }
+
+export async function uploadImage(file: File) {
+  const fileExt = file.name.split('.').pop()
+  const fileName = `${Math.random()}.${fileExt}`
+  const filePath = `${fileName}`
+
+  const { data, error } = await supabase.storage
+    .from('blog-images')
+    .upload(filePath, file)
+
+  if (error) {
+    console.error('Error uploading image:', error)
+    return null
+  }
+
+  const { data: urlData } = supabase.storage
+    .from('blog-images')
+    .getPublicUrl(filePath)
+
+  return urlData.publicUrl
+}

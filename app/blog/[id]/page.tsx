@@ -64,7 +64,7 @@ export default function BlogPost({ params }: { params: { id: string } }) {
     <div className="container mx-auto px-4 py-8">
       <h1 className="text-3xl font-bold mb-4">{post.title}</h1>
       <p className="text-gray-500 mb-4">{post.date}</p>
-      <div className="mb-8" dangerouslySetInnerHTML={{ __html: post.content }}></div>
+      <div className="mb-8 prose prose-img:mx-auto" dangerouslySetInnerHTML={{ __html: post.content }}></div>
       {isAdmin && (
         <button
           onClick={handleTweet}
