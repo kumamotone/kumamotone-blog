@@ -196,7 +196,8 @@ export default function PostEditor({ initialTitle = '', initialContent = '', pos
       handlePaste: (view, event, slice) => {
         const items = event.clipboardData?.items;
         if (items) {
-          for (const item of items) {
+          for (let i = 0; i < items.length; i++) {
+            const item = items[i];
             if (item.type.startsWith('image/')) {
               event.preventDefault();
               const file = item.getAsFile();

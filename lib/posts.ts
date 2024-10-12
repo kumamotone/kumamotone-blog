@@ -178,7 +178,7 @@ export async function getPaginatedPosts(page: number, perPage: number = 5): Prom
 export async function getPreviousAndNextPost(currentId: number): Promise<{ prev: Post | null, next: Post | null }> {
   const { data, error } = await supabase
     .from('posts')
-    .select('id, title')
+    .select('id, title, content, created_at')  // content と created_at を追加
     .order('created_at', { ascending: false });
 
   if (error) {

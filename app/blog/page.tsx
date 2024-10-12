@@ -1,17 +1,16 @@
 'use client'
 
-import { getAllPosts, Post, getAllDrafts, Draft } from "@/lib/posts"
+import { getAllPosts, Post } from "@/lib/posts"
 import Link from "next/link"
 import { useEffect, useState } from "react"
 import DOMPurify from 'dompurify'
 import hljs from 'highlight.js'
 import 'highlight.js/styles/github-dark.css' // または他のスタイル
 import { getCurrentUser } from "@/lib/supabase"
+import { User } from "@supabase/supabase-js"
 
 export default function BlogList() {
   const [posts, setPosts] = useState<Post[]>([])
-  const [drafts, setDrafts] = useState<Draft[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
   const [user, setUser] = useState<User | null>(null);
 
   useEffect(() => {
@@ -20,11 +19,6 @@ export default function BlogList() {
       setUser(currentUser);
       const allPosts = await getAllPosts();
       setPosts(allPosts);
-      if (currentUser) {
-        const fetchedDrafts = await getAllDrafts(currentUser.id);
-        setDrafts(fetchedDrafts);
-      }
-      setIsLoading(false);
     }
     loadData();
   }, []);
@@ -35,9 +29,18 @@ export default function BlogList() {
     }
   }, [posts])
 
+  // userステートを使用する例（必要に応じて）
+  const renderUserInfo = () => {
+    if (user) {
+      return <p>ログインユーザー: {user.email}</p>
+    }
+    return null;
+  }
+
   return (
     <div className="container mx-auto px-4 py-8">
       <h1 className="text-4xl font-bold mb-8 text-center">山蔭の熊小屋</h1>
+      {renderUserInfo()}
       <div className="space-y-12">
         {posts.map((post) => (
           <article key={post.id} className="bg-white shadow-lg rounded-lg overflow-hidden">
@@ -47,7 +50,7 @@ export default function BlogList() {
                   {post.title}
                 </Link>
               </h2>
-              <p className="text-gray-600 mb-4">{post.date}</p>
+              <p className="text-gray-600 mb-4">{new Date(post.created_at).toLocaleDateString()}</p>
               <div 
                 className="prose prose-lg max-w-none"
                 dangerouslySetInnerHTML={{ 

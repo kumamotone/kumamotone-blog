@@ -6,6 +6,9 @@ import { User } from "@supabase/supabase-js"
 import DOMPurify from 'dompurify'
 import Link from "next/link"
 import { useEffect, useState } from 'react'
+// import Prism from 'prismjs'
+// import 'prismjs/components/prism-javascript'
+// import 'prismjs/components/prism-typescript'
 
 export default function BlogPost({ params }: { params: { id: string } }) {
   const [post, setPost] = useState<Post | null>(null);
@@ -30,11 +33,9 @@ export default function BlogPost({ params }: { params: { id: string } }) {
 
   useEffect(() => {
     if (typeof window !== 'undefined' && post) {
-      Promise.all([
-        import('prismjs'),
-        import('prismjs/components/prism-javascript'),
-        import('prismjs/components/prism-typescript'),
-      ]).then(([Prism]) => {
+      import('prismjs').then((Prism) => {
+        import('prismjs/components/prism-javascript');
+        import('prismjs/components/prism-typescript');
         Prism.highlightAll();
       }).catch(error => {
         console.error('Prismのインポートエラー:', error);
