@@ -15,7 +15,7 @@ import NextLink from 'next/link'
 import { useRouter } from 'next/navigation'
 import { EditorView } from 'prosemirror-view'
 import React, { useEffect, useState } from 'react'
-import { FiList, FiSave } from 'react-icons/fi'
+import { FiList, FiSave, FiEdit, FiHome, FiSend } from 'react-icons/fi'
 
 const CustomLink = Link.extend({
   inclusive: false,
@@ -382,9 +382,13 @@ export default function PostEditor({ initialTitle = '', initialContent = '', pos
   return (
     <div className="container mx-auto px-4 py-8 max-w-4xl">
       <div className="flex justify-between items-center mb-6">
-        <h1 className="text-3xl font-bold">{postId ? '記事編集' : '新しい記事を作成'}</h1>
+        <h1 className="text-3xl font-bold flex items-center">
+          <FiEdit className="mr-2" />
+          {postId ? '記事編集' : '新しい記事を作成'}
+        </h1>
         {postId && (
-          <NextLink href="/blog/new" className="text-blue-500 hover:underline">
+          <NextLink href="/blog/new" className="text-blue-500 hover:underline flex items-center">
+            <FiEdit className="mr-2" />
             新しい記事を書く
           </NextLink>
         )}
@@ -422,23 +426,28 @@ export default function PostEditor({ initialTitle = '', initialContent = '', pos
                   <FiSave className="mr-2" />
                   {isSaving ? '保存中...' : '下書き保存'}
                 </button>
-                <NextLink href="/drafts" className="bg-gray-300 text-gray-700 px-4 py-2 rounded hover:bg-gray-400 flex items-center">
+                <NextLink 
+                  href="/drafts" 
+                  className="bg-gray-300 text-gray-700 px-4 py-2 rounded hover:bg-gray-400 flex items-center"
+                >
                   <FiList className="mr-2" />
                   下書き一覧
                 </NextLink>
               </>
             )}
             {lastSavedAt && (
-              <p className="text-sm text-gray-500 ml-4">
+              <p className="text-sm text-gray-500 ml-4 flex items-center">
+                <FiSave className="mr-2" />
                 自動保存: {lastSavedAt.toLocaleString()}
               </p>
             )}
           </div>
           <button 
             type="submit" 
-            className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
+            className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 flex items-center"
             disabled={isSaving}
           >
+            <FiSend className="mr-2" />
             {isSaving ? '投稿中...' : (postId ? '更新する' : '投稿する')}
           </button>
         </div>

@@ -7,6 +7,7 @@ import DOMPurify from 'dompurify'
 import Link from "next/link"
 import { useRouter, useSearchParams } from "next/navigation"
 import React, { useEffect, useState } from 'react'
+import { FiEdit, FiTwitter, FiArrowUp } from 'react-icons/fi'
 
 function LoadingSkeleton() {
   return (
@@ -148,13 +149,15 @@ export default function Home() {
                 />
                 {user && (
                   <div className="mt-6 flex items-center space-x-4">
-                    <Link href={`/blog/edit/${post.id}`} className="text-green-600 hover:underline">
+                    <Link href={`/blog/edit/${post.id}`} className="text-green-600 hover:underline flex items-center">
+                      <FiEdit className="mr-2" />
                       編集
                     </Link>
                     <button
                       onClick={() => handleTweet(post)}
-                      className="text-blue-500 hover:text-blue-600"
+                      className="text-blue-500 hover:text-blue-600 flex items-center"
                     >
+                      <FiTwitter className="mr-2" />
                       X に投稿
                     </button>
                   </div>
@@ -189,6 +192,10 @@ export default function Home() {
           ))}
         </nav>
       </footer>
+      <a href="#top" className="text-green-600 hover:underline flex items-center justify-center mt-8">
+        <FiArrowUp className="mr-2" />
+        ページ上部へ
+      </a>
     </div>
   );
 }

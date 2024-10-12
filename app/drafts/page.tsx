@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 import { getAllDrafts, Draft, deleteDraft } from "@/lib/posts";
 import { getCurrentUser } from "@/lib/supabase";
 import { User } from "@supabase/supabase-js";
+import { FiEdit, FiTrash2, FiHome } from 'react-icons/fi';
 
 export default function DraftsList() {
   const [user, setUser] = useState<User | null>(null);
@@ -52,31 +53,38 @@ export default function DraftsList() {
 
   return (
     <div className="container mx-auto px-4 py-8 max-w-4xl">
-      <h1 className="text-4xl font-bold mb-8 text-center">下書き一覧</h1>
+      <h1 className="text-4xl font-bold mb-8 text-center flex items-center justify-center">
+        <FiEdit className="mr-2" />
+        下書き一覧
+      </h1>
       {drafts.length === 0 ? (
         <p className="text-center text-gray-500">下書きがありません。</p>
       ) : (
         <ul className="space-y-6">
           {drafts.map((draft) => (
             <li key={draft.user_id} className="border-b pb-4">
-              <Link href={`/blog/new?draft=${draft.user_id}`} className="text-xl font-semibold text-blue-600 hover:underline">
+              <Link href={`/blog/new?draft=${draft.user_id}`} className="text-xl font-semibold text-blue-600 hover:underline flex items-center">
+                <FiEdit className="mr-2" />
                 {draft.title}
               </Link>
               <p className="text-gray-500 text-sm mt-1">{new Date(draft.created_at).toLocaleString()}</p>
               <button
                 onClick={() => handleDeleteDraft(draft.user_id)}
-                className="text-sm text-red-500 hover:underline mt-2 inline-block mr-4"
+                className="text-sm text-red-500 hover:underline mt-2 inline-block mr-4 flex items-center"
               >
+                <FiTrash2 className="mr-1" />
                 削除
               </button>
-              <Link href={`/blog/new?draft=${draft.user_id}`} className="text-sm text-blue-500 hover:underline mt-2 inline-block">
+              <Link href={`/blog/new?draft=${draft.user_id}`} className="text-sm text-blue-500 hover:underline mt-2 inline-block flex items-center">
+                <FiEdit className="mr-1" />
                 編集
               </Link>
             </li>
           ))}
         </ul>
       )}
-      <Link href="/" className="text-blue-500 hover:underline mt-8 inline-block">
+      <Link href="/" className="text-blue-500 hover:underline mt-8 inline-block flex items-center">
+        <FiHome className="mr-2" />
         ホームに戻る
       </Link>
     </div>
