@@ -84,72 +84,73 @@ const ResizableImage = Image.extend({
     return {
       ...this.parent?.(),
       width: {
-        default: null,
+        default: 600, // デフォルトの幅を600pxに設定
         renderHTML: attributes => {
           if (!attributes.width) {
-            return {}
+            return {};
           }
           return {
             width: attributes.width,
-            style: `width: ${attributes.width}px`,
-          }
+            style: `width: ${attributes.width}px; max-width: 100%;`, // max-widthを追加
+          };
         },
       },
-    }
+    };
   },
 
   addNodeView() {
     return ({ node, getPos, editor }) => {
-      const container = document.createElement('div')
-      container.classList.add('image-resizer')
+      const container = document.createElement('div');
+      container.classList.add('image-resizer');
 
-      const img = document.createElement('img')
-      img.src = node.attrs.src
-      img.alt = node.attrs.alt
-      img.width = node.attrs.width || 'auto'
+      const img = document.createElement('img');
+      img.src = node.attrs.src;
+      img.alt = node.attrs.alt;
+      img.width = node.attrs.width || 600; // デフォルトの幅を600pxに設定
+      img.style.maxWidth = '100%'; // max-widthを100%に設定
 
-      container.append(img)
+      container.append(img);
 
-      const handle = document.createElement('div')
-      handle.classList.add('resize-handle')
-      container.append(handle)
+      const handle = document.createElement('div');
+      handle.classList.add('resize-handle');
+      container.append(handle);
 
-      let startX: number
-      let startWidth: number
+      let startX: number;
+      let startWidth: number;
 
       const onMouseDown = (e: MouseEvent) => {
-        e.preventDefault()
-        startX = e.pageX
-        startWidth = img.width
-        document.addEventListener('mousemove', onMouseMove)
-        document.addEventListener('mouseup', onMouseUp)
-      }
+        e.preventDefault();
+        startX = e.pageX;
+        startWidth = img.width;
+        document.addEventListener('mousemove', onMouseMove);
+        document.addEventListener('mouseup', onMouseUp);
+      };
 
       const onMouseMove = (e: MouseEvent) => {
-        const diff = e.pageX - startX
-        img.width = startWidth + diff
-      }
+        const diff = e.pageX - startX;
+        img.width = Math.max(200, Math.min(startWidth + diff, 800)); // 最小幅200px、最大幅800pxに制限
+      };
 
       const onMouseUp = () => {
-        document.removeEventListener('mousemove', onMouseMove)
-        document.removeEventListener('mouseup', onMouseUp)
+        document.removeEventListener('mousemove', onMouseMove);
+        document.removeEventListener('mouseup', onMouseUp);
         if (typeof getPos === 'function') {
           editor.view.dispatch(editor.view.state.tr.setNodeMarkup(getPos(), undefined, {
             ...node.attrs,
             width: img.width,
-          }))
+          }));
         }
-      }
+      };
 
-      handle.addEventListener('mousedown', onMouseDown)
+      handle.addEventListener('mousedown', onMouseDown);
 
       return {
         dom: container,
         destroy: () => {
-          handle.removeEventListener('mousedown', onMouseDown)
+          handle.removeEventListener('mousedown', onMouseDown);
         },
-      }
-    }
+      };
+    };
   },
 });
 
