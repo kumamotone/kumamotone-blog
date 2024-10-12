@@ -164,8 +164,6 @@ export default function PostEditor({ initialTitle = '', initialContent = '', pos
   const [error, setError] = useState('');
   const [isSaving, setIsSaving] = useState(false);
   const [lastSavedAt, setLastSavedAt] = useState<Date | null>(null);
-  const [showDraftDialog, setShowDraftDialog] = useState(false);
-  const [draftContent, setDraftContent] = useState<{ title: string, content: string } | null>(null);
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   const router = useRouter();
 
@@ -256,16 +254,19 @@ export default function PostEditor({ initialTitle = '', initialContent = '', pos
           const drafts = await getDraft(user.id);
           if (drafts.length > 0) {
             const latestDraft = drafts[0];
-            setDraftContent({ title: latestDraft.title, content: latestDraft.content });
-            setShowDraftDialog(true);
+            setTitle(latestDraft.title);
+            setContent(latestDraft.content);
+            if (editor) {
+              editor.commands.setContent(latestDraft.content);
+            }
           }
         } catch (error) {
-          console.error('Error loading draft:', error);
+          console.error('ドラフトの読み込み中にエラーが発生しました:', error);
         }
       }
     }
     loadDraft();
-  }, [user, postId]);
+  }, [user, postId, editor]);
 
   useEffect(() => {
     if (editor && content) {
@@ -289,20 +290,25 @@ export default function PostEditor({ initialTitle = '', initialContent = '', pos
     };
   }, [hasUnsavedChanges]);
 
-  const handleRestoreDraft = () => {
-    if (draftContent) {
-      setTitle(draftContent.title);
-      setContent(draftContent.content);
-      if (editor) {
-        editor.commands.setContent(draftContent.content);
+  useEffect(() => {
+    const handlePopState = (event: PopStateEvent) => {
+      if (hasUnsavedChanges) {
+        const confirmMessage = '変更が保存されていません。このページを離れてもよろしいですか？';
+        if (window.confirm(confirmMessage)) {
+          return;
+        } else {
+          event.preventDefault();
+          window.history.pushState(null, '', window.location.href);
+        }
       }
-    }
-    setShowDraftDialog(false);
-  };
+    };
 
-  const handleDiscardDraft = () => {
-    setShowDraftDialog(false);
-  };
+    window.addEventListener('popstate', handlePopState);
+
+    return () => {
+      window.removeEventListener('popstate', handlePopState);
+    };
+  }, [hasUnsavedChanges]);
 
   const handleTitleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setTitle(e.target.value);
@@ -373,29 +379,6 @@ export default function PostEditor({ initialTitle = '', initialContent = '', pos
 
   return (
     <div className="container mx-auto px-4 py-8 max-w-4xl">
-      {showDraftDialog && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white p-6 rounded-lg shadow-lg">
-            <h2 className="text-xl font-bold mb-4">保存されたドラフトがあります</h2>
-            <p className="mb-4">保存されたドラフトを復元しますか？</p>
-            <div className="flex justify-end space-x-4">
-              <button
-                onClick={handleDiscardDraft}
-                className="px-4 py-2 bg-gray-300 rounded hover:bg-gray-400"
-              >
-                破棄する
-              </button>
-              <button
-                onClick={handleRestoreDraft}
-                className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
-              >
-                復元する
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-      
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-3xl font-bold">{postId ? '記事編集' : '新しい記事を作成'}</h1>
         {postId && (
