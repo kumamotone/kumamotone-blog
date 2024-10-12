@@ -14,7 +14,7 @@ import NextLink from 'next/link'
 import { useRouter } from 'next/navigation'
 import { EditorView } from 'prosemirror-view'
 import React, { useCallback, useEffect, useState } from 'react'
-import { FiEdit, FiHelpCircle, FiList, FiSave, FiSend } from 'react-icons/fi'
+import { FiEdit, FiHelpCircle, FiList, FiSave, FiSend, FiTrash2 } from 'react-icons/fi'
 
 const CustomLink = Link.extend({
   inclusive: false,
@@ -344,6 +344,29 @@ export default function PostEditor({ initialTitle = '', initialContent = '', pos
     }
   };
 
+  const handleDeleteDraft = async () => {
+    if (user && !postId) {
+      if (window.confirm('下書きを削除してもよろしいですか？この操作は取り消せません。')) {
+        try {
+          await deleteDraft(user.id);
+          setTitle('');
+          setContent('');
+          if (editor) {
+            editor.commands.setContent('');
+          }
+          setLastSavedAt(null);
+          setHasUnsavedChanges(false);
+          localStorage.removeItem('draftTitle');
+          localStorage.removeItem('draftContent');
+          alert('下書きが削除されました。');
+        } catch (error) {
+          console.error('下書きの削除中にエラーが発生しました:', error);
+          alert('下書きの削除中にエラーが発生しました。');
+        }
+      }
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (user && editor) {
@@ -459,6 +482,14 @@ export default function PostEditor({ initialTitle = '', initialContent = '', pos
                   <FiList className="mr-2" />
                   下書き一覧
                 </NextLink>
+                <button
+                  type="button"
+                  onClick={handleDeleteDraft}
+                  className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600 flex items-center"
+                >
+                  <FiTrash2 className="mr-2" />
+                  下書き削除
+                </button>
               </>
             )}
             {lastSavedAt && (
