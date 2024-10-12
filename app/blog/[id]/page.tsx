@@ -12,6 +12,8 @@ import 'prismjs/themes/prism-tomorrow.css'; // または他のテーマ
 import 'prismjs/components/prism-javascript';
 import 'prismjs/components/prism-typescript';
 // 他の必要な言語も同様にインポート
+import hljs from 'highlight.js'
+import 'highlight.js/styles/github-dark.css' // または他のスタイル
 
 export default function BlogPost({ params }: { params: { id: string } }) {
   const [post, setPost] = useState<Post | null>(null);
@@ -46,7 +48,9 @@ export default function BlogPost({ params }: { params: { id: string } }) {
   }, [id]);
 
   useEffect(() => {
-    Prism.highlightAll();
+    if (post) {
+      hljs.highlightAll()
+    }
   }, [post]);
 
   const handleDelete = async () => {
