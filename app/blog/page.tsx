@@ -12,13 +12,19 @@ import { User } from "@supabase/supabase-js"
 export default function BlogList() {
   const [posts, setPosts] = useState<Post[]>([])
   const [user, setUser] = useState<User | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     async function loadData() {
       const currentUser = await getCurrentUser();
       setUser(currentUser);
-      const allPosts = await getAllPosts();
-      setPosts(allPosts);
+      try {
+        const allPosts = await getAllPosts();
+        setPosts(allPosts);
+      } catch (error) {
+        console.error('投稿の読み込み中にエラーが発生しました:', error)
+        setError('投稿の読み込み中にエラーが発生しました。後でもう一度お試しください。')
+      }
     }
     loadData();
   }, []);
@@ -35,6 +41,10 @@ export default function BlogList() {
       return <p>ログインユーザー: {user.email}</p>
     }
     return null;
+  }
+
+  if (error) {
+    return <div className="text-red-500">{error}</div>
   }
 
   return (

@@ -12,55 +12,65 @@ export interface Draft extends Omit<Post, 'id'> {
 }
 
 export async function getAllPosts(): Promise<Post[]> {
-  const { data, error } = await supabase
-    .from('posts')
-    .select('*')
-    .order('created_at', { ascending: false }) // dateの代わりにcreated_atを使用
+  try {
+    const { data, error } = await supabase
+      .from('posts')
+      .select('*')
+      .order('created_at', { ascending: false })
 
-  if (error) {
-    console.error('Error fetching posts:', error)
-    return []
+    if (error) {
+      throw new Error(`投稿の取得中にエラーが発生しました: ${error.message}`);
+    }
+
+    return data || [];
+  } catch (error) {
+    console.error('getAllPosts エラー:', error);
+    throw error; // エラーを上位に伝播させる
   }
-
-  return data || []
 }
 
 export async function getPostById(id: number): Promise<Post | null> {
-  const { data, error } = await supabase
-    .from('posts')
-    .select('*')
-    .eq('id', id)
-    .single()
+  try {
+    const { data, error } = await supabase
+      .from('posts')
+      .select('*')
+      .eq('id', id)
+      .single()
 
-  if (error) {
-    console.error('Error fetching post:', error)
-    return null
+    if (error) {
+      throw new Error(`ID ${id} の投稿の取得中にエラーが発生しました: ${error.message}`);
+    }
+
+    return data;
+  } catch (error) {
+    console.error('getPostById エラー:', error);
+    throw error; // エラーを上位に伝播させる
   }
-
-  console.log('Fetched post:', JSON.stringify(data, null, 2)); // 整形してログ出力
-  return data
 }
 
-export async function createPost(post: Omit<Post, 'id' | 'created_at'>): Promise<Post | null> {
+export async function createPost(post: Omit<Post, 'id' | 'created_at'>): Promise<Post> {
   try {
     const { data, error } = await supabase
       .from('posts')
       .insert({ 
         ...post, 
-        created_at: new Date().toISOString() // dateの代わりにcreated_atを使用
+        created_at: new Date().toISOString()
       })
       .select()
-      .single(); // 単一の投稿を返すように変更
+      .single();
 
     if (error) {
-      console.error('Error creating post:', error);
-      throw error;
+      throw new Error(`投稿の作成中にエラーが発生しました: ${error.message}`);
+    }
+
+    if (!data) {
+      throw new Error('投稿の作成に成功しましたが、データが返されませんでした。');
     }
 
     return data;
   } catch (error) {
-    console.error('Error creating post:', error);
-    return null;
+    console.error('createPost エラー:', error);
+    throw error; // エラーを上位に伝播させる
   }
 }
 
