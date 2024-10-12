@@ -1,8 +1,9 @@
 'use client'
 
-import { createPost, deleteDraft, getDraft, saveDraft, deletePost } from '@/lib/posts'
+import { createPost, deleteDraft, deletePost, getDraft, saveDraft } from '@/lib/posts'
 import { uploadImage } from '@/lib/supabase'
 import { User } from '@supabase/supabase-js'
+import { NodeViewProps } from '@tiptap/core'
 import CodeBlock from '@tiptap/extension-code-block'
 import Image from '@tiptap/extension-image'
 import Link from '@tiptap/extension-link'
@@ -14,9 +15,8 @@ import NextLink from 'next/link'
 import { useRouter } from 'next/navigation'
 import { EditorView } from 'prosemirror-view'
 import React, { useCallback, useEffect, useState } from 'react'
-import { FiEdit, FiHelpCircle, FiList, FiSave, FiSend, FiTrash2, FiAlertTriangle } from 'react-icons/fi'
-import { toast } from 'react-toastify';
-import { NodeViewProps } from '@tiptap/core'
+import { FiAlertTriangle, FiArrowLeft, FiEdit, FiHelpCircle, FiList, FiSave, FiSend, FiTrash2 } from 'react-icons/fi'
+import { toast } from 'react-toastify'
 
 const CustomLink = Link.extend({
   inclusive: false,
@@ -460,13 +460,32 @@ export default function PostEditor({ initialTitle = '', initialContent = '', pos
     }
   };
 
+  const handleGoBack = () => {
+    if (hasUnsavedChanges) {
+      const confirmMessage = '変更が保存されていません。このページを離れてもよろしいですか？';
+      if (window.confirm(confirmMessage)) {
+        router.back();
+      }
+    } else {
+      router.back();
+    }
+  };
+
   return (
     <div className="container mx-auto px-4 py-8 max-w-4xl">
       <div className="flex justify-between items-center mb-6">
-        <h1 className="text-3xl font-bold flex items-center">
-          <FiEdit className="mr-2" />
-          {postId ? '記事編集' : '新しい記事を作成'}
-        </h1>
+        <div className="flex items-center">
+          <button
+            onClick={handleGoBack}
+            className="mr-4 text-gray-600 hover:text-gray-800 transition-colors duration-200"
+          >
+            <FiArrowLeft size={24} />
+          </button>
+          <h1 className="text-3xl font-bold flex items-center">
+            <FiEdit className="mr-2" />
+            {postId ? '記事編集' : '新しい記事を作成'}
+          </h1>
+        </div>
         {postId && (
           <NextLink href="/blog/new" className="text-blue-500 hover:underline flex items-center">
             <FiEdit className="mr-2" />
