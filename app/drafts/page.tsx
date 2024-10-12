@@ -76,8 +76,8 @@ export default function DraftsList() {
           ))}
         </ul>
       )}
-      <Link href="/blog" className="text-blue-500 hover:underline mt-8 inline-block">
-        ブログ一覧に戻る
+      <Link href="/" className="text-blue-500 hover:underline mt-8 inline-block">
+        ホームに戻る
       </Link>
     </div>
   );
