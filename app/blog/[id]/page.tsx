@@ -5,65 +5,39 @@ import { getCurrentUser } from "@/lib/supabase"
 import { User } from "@supabase/supabase-js"
 import DOMPurify from 'dompurify'
 import Link from "next/link"
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback, useMemo } from 'react'
 import Prism from 'prismjs'
 import 'prismjs/components/prism-javascript'
 import 'prismjs/components/prism-typescript'
-import { Metadata } from 'next'
-
-export async function generateMetadata({ params }: { params: { id: string } }): Promise<Metadata> {
-  const post = await getPostById(parseInt(params.id))
-  if (!post) {
-    return {
-      title: '記事が見つかりません',
-    }
-  }
-
-  const ogImageUrl = `https://your-domain.com/api/og?title=${encodeURIComponent(post.title)}`
-
-  return {
-    title: post.title,
-    description: post.content.substring(0, 160), // 最初の160文字を説明文として使用
-    openGraph: {
-      title: post.title,
-      description: post.content.substring(0, 160),
-      url: `https://your-domain.com/blog/${post.id}`,
-      type: 'article',
-      publishedTime: post.created_at,
-      images: [
-        {
-          url: ogImageUrl,
-          width: 1200,
-          height: 630,
-        },
-      ],
-    },
-    twitter: {
-      card: 'summary_large_image',
-      title: post.title,
-      description: post.content.substring(0, 160),
-      images: [ogImageUrl],
-    },
-  }
-}
 
 export default function BlogPost({ params }: { params: { id: string } }) {
   const [post, setPost] = useState<Post | null>(null);
   const [prevPost, setPrevPost] = useState<Post | null>(null);
   const [nextPost, setNextPost] = useState<Post | null>(null);
   const [user, setUser] = useState<User | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     async function loadData() {
-      const [loadedPost, { prev, next }, currentUser] = await Promise.all([
-        getPostById(parseInt(params.id)),
-        getPreviousAndNextPost(parseInt(params.id)),
-        getCurrentUser()
-      ]);
-      setPost(loadedPost);
-      setPrevPost(prev);
-      setNextPost(next);
-      setUser(currentUser);
+      setIsLoading(true);
+      setError(null);
+      try {
+        const [loadedPost, { prev, next }, currentUser] = await Promise.all([
+          getPostById(parseInt(params.id)),
+          getPreviousAndNextPost(parseInt(params.id)),
+          getCurrentUser()
+        ]);
+        setPost(loadedPost);
+        setPrevPost(prev);
+        setNextPost(next);
+        setUser(currentUser);
+      } catch (err) {
+        console.error('Error loading post data:', err);
+        setError('記事の読み込み中にエラーが発生しました。');
+      } finally {
+        setIsLoading(false);
+      }
     }
     loadData();
   }, [params.id]);
@@ -74,14 +48,29 @@ export default function BlogPost({ params }: { params: { id: string } }) {
     }
   }, [post]);
 
-  const handleTweet = (post: Post) => {
+  const handleTweet = useCallback((post: Post) => {
     const tweetText = encodeURIComponent(`${post.title} | 山蔭の熊小屋`);
     const tweetUrl = encodeURIComponent(`${window.location.origin}/blog/${post.id}`);
     window.open(`https://twitter.com/intent/tweet?text=${tweetText}&url=${tweetUrl}`, '_blank');
-  };
+  }, []);
+
+  const sanitizedContent = useMemo(() => {
+    return post ? DOMPurify.sanitize(post.content, {
+      ALLOWED_TAGS: ['p', 'strong', 'em', 'u', 's', 'a', 'h1', 'h2', 'h3', 'ul', 'ol', 'li', 'blockquote', 'img', 'pre', 'code'],
+      ALLOWED_ATTR: ['href', 'target', 'src', 'alt', 'width', 'height', 'class']
+    }) : '';
+  }, [post]);
+
+  if (isLoading) {
+    return <div>記事を読み込んでいます...</div>;
+  }
+
+  if (error) {
+    return <div className="text-red-500">{error}</div>;
+  }
 
   if (!post) {
-    return <div>記事を読み込んでいます...</div>;
+    return <div>記事が見つかりません。</div>;
   }
 
   return (
@@ -114,14 +103,7 @@ export default function BlogPost({ params }: { params: { id: string } }) {
       </p>
 
       <article className="prose prose-lg max-w-none mb-8">
-        <div 
-          dangerouslySetInnerHTML={{ 
-            __html: DOMPurify.sanitize(post.content, {
-              ALLOWED_TAGS: ['p', 'strong', 'em', 'u', 's', 'a', 'h1', 'h2', 'h3', 'ul', 'ol', 'li', 'blockquote', 'img', 'pre', 'code'],
-              ALLOWED_ATTR: ['href', 'target', 'src', 'alt', 'width', 'height', 'class']
-            })
-          }} 
-        />
+        <div dangerouslySetInnerHTML={{ __html: sanitizedContent }} />
       </article>
 
       <div className="flex justify-between items-center mt-8">
