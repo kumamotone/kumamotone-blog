@@ -12,7 +12,8 @@ import { EditorContent, useEditor } from '@tiptap/react'
 import StarterKit from '@tiptap/starter-kit'
 import { useRouter } from 'next/navigation'
 import { EditorView } from 'prosemirror-view'
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useState, useCallback } from 'react'
+import debounce from 'lodash/debounce'
 
 const CustomLink = Link.extend({
   inclusive: false,
@@ -158,9 +159,31 @@ interface PostEditorProps {
 
 export default function PostEditor({ initialTitle = '', initialContent = '', postId, user, onSubmit }: PostEditorProps) {
   const [title, setTitle] = useState(initialTitle);
+  const [content, setContent] = useState(initialContent);
   const [error, setError] = useState('');
   const [isSaving, setIsSaving] = useState(false);
+  const [lastSavedAt, setLastSavedAt] = useState<Date | null>(null);
+  const [showDraftDialog, setShowDraftDialog] = useState(false);
+  const [draftContent, setDraftContent] = useState<{ title: string, content: string } | null>(null);
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   const router = useRouter();
+
+  // debounceされた自動保存関数
+  const debouncedSaveDraft = debounce(async (title: string, content: string) => {
+    if (user && !postId) {
+      try {
+        await saveDraft({
+          user_id: user.id,
+          title: title,
+          content: content,
+          created_at: new Date().toISOString(),
+        });
+        setLastSavedAt(new Date());
+      } catch (error) {
+        console.error('Error auto-saving draft:', error);
+      }
+    }
+  }, 2000); // 2秒のディレイ
 
   const editor = useEditor({
     extensions: [
@@ -178,7 +201,7 @@ export default function PostEditor({ initialTitle = '', initialContent = '', pos
         placeholder: 'ここに記事を書いてください...',
       }),
     ],
-    content: initialContent || '',
+    content: content,
     editorProps: {
       attributes: {
         class: 'prose prose-sm sm:prose lg:prose-lg xl:prose-2xl mx-auto focus:outline-none',
@@ -213,9 +236,13 @@ export default function PostEditor({ initialTitle = '', initialContent = '', pos
         return false;
       },
     },
-    onUpdate: () => {
-      // 自動保存などの処理をここに追加できます
+    onUpdate: ({ editor }) => {
+      const newContent = editor.getHTML();
+      setContent(newContent);
+      setHasUnsavedChanges(true);
+      debouncedSaveDraft(title, newContent);
     },
+    immediatelyRender: false, // この行を追加
   });
 
   useEffect(() => {
@@ -223,28 +250,64 @@ export default function PostEditor({ initialTitle = '', initialContent = '', pos
       if (user && !postId) {
         const drafts = await getDraft(user.id);
         if (drafts.length > 0) {
-          const latestDraft = drafts[0]; // 最新のドラフトを使用
-          setTitle(latestDraft.title);
-          editor?.commands.setContent(latestDraft.content);
+          const latestDraft = drafts[0];
+          setDraftContent({ title: latestDraft.title, content: latestDraft.content });
+          setShowDraftDialog(true);
         }
       }
     }
     loadDraft();
-  }, [user, postId, editor]);
+  }, [user, postId]);
+
+  useEffect(() => {
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      if (hasUnsavedChanges) {
+        e.preventDefault();
+        e.returnValue = '変更が保存されていません。このページを離れてもよろしいですか？';
+        return e.returnValue;
+      }
+    };
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
+
+    return () => {
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+    };
+  }, [hasUnsavedChanges]);
+
+  const handleRestoreDraft = () => {
+    if (draftContent) {
+      setTitle(draftContent.title);
+      setContent(draftContent.content);
+      editor?.commands.setContent(draftContent.content);
+    }
+    setShowDraftDialog(false);
+  };
+
+  const handleDiscardDraft = () => {
+    setShowDraftDialog(false);
+  };
+
+  const handleTitleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setTitle(e.target.value);
+    setHasUnsavedChanges(true);
+  };
 
   const handleSaveDraft = async () => {
     if (user && editor) {
       try {
         await saveDraft({
           user_id: user.id,
-          title: title, // titleステートを使用
+          title: title,
           content: editor.getHTML(),
-          created_at: new Date().toISOString(), // created_atフィールドを追加
+          created_at: new Date().toISOString(),
         });
-        // ドラフト保存後のフィードバックを追加（オプション）
+        setLastSavedAt(new Date());
+        setHasUnsavedChanges(false);
         alert('ドラフトが保存されました。');
       } catch (error) {
         console.error('Error saving draft:', error);
+        alert('ドラフトの保存中にエラーが発生しました。');
       }
     }
   };
@@ -263,7 +326,8 @@ export default function PostEditor({ initialTitle = '', initialContent = '', pos
           });
           if (newPost) {
             await deleteDraft(user.id);
-            router.push('/'); // ホームページにリダイレクト
+            setHasUnsavedChanges(false);
+            router.push('/');
           }
         }
       } catch (error) {
@@ -293,6 +357,28 @@ export default function PostEditor({ initialTitle = '', initialContent = '', pos
 
   return (
     <div className="container mx-auto px-4 py-8 max-w-4xl">
+      {showDraftDialog && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white p-6 rounded-lg shadow-lg">
+            <h2 className="text-xl font-bold mb-4">保存されたドラフトがあります</h2>
+            <p className="mb-4">保存されたドラフトを復元しますか？</p>
+            <div className="flex justify-end space-x-4">
+              <button
+                onClick={handleDiscardDraft}
+                className="px-4 py-2 bg-gray-300 rounded hover:bg-gray-400"
+              >
+                破棄する
+              </button>
+              <button
+                onClick={handleRestoreDraft}
+                className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+              >
+                復元する
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
       <h1 className="text-3xl font-bold mb-6">{postId ? '記事編集' : '新しい記事を作成'}</h1>
       {error && <p className="text-red-500 mb-4">{error}</p>}
       <form onSubmit={handleSubmit} className="space-y-4">
@@ -302,7 +388,7 @@ export default function PostEditor({ initialTitle = '', initialContent = '', pos
             type="text"
             id="title"
             value={title}
-            onChange={(e) => setTitle(e.target.value)}
+            onChange={handleTitleChange}
             className="w-full p-2 border border-gray-300 rounded"
             required
           />
@@ -313,17 +399,24 @@ export default function PostEditor({ initialTitle = '', initialContent = '', pos
             <EditorContent editor={editor} />
           </div>
         </div>
-        <div className="flex justify-between">
-          {!postId && (
-            <button
-              type="button"
-              onClick={handleSaveDraft}
-              className="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600"
-              disabled={isSaving}
-            >
-              {isSaving ? '保存中...' : '下書き保存'}
-            </button>
-          )}
+        <div className="flex justify-between items-center mt-4">
+          <div className="flex items-center space-x-4">
+            {lastSavedAt && (
+              <p className="text-sm text-gray-500">
+                最終保存: {lastSavedAt.toLocaleString()}
+              </p>
+            )}
+            {!postId && (
+              <button
+                type="button"
+                onClick={handleSaveDraft}
+                className="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600"
+                disabled={isSaving}
+              >
+                {isSaving ? '保存中...' : '下書き保存'}
+              </button>
+            )}
+          </div>
           <button 
             type="submit" 
             className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
