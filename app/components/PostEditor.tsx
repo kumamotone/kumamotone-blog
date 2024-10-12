@@ -39,44 +39,6 @@ const CustomCodeBlock = CodeBlock.extend({
   },
 });
 
-const Hashtag = Node.create({
-  name: 'hashtag',
-  group: 'inline',
-  inline: true,
-  selectable: false,
-  atom: true,
-
-  addAttributes() {
-    return {
-      hashtag: {
-        default: null,
-        parseHTML: element => element.getAttribute('data-hashtag'),
-        renderHTML: attributes => {
-          return {
-            'data-hashtag': attributes.hashtag,
-          }
-        },
-      },
-    }
-  },
-
-  parseHTML() {
-    return [
-      {
-        tag: 'span[data-hashtag]',
-      },
-    ]
-  },
-
-  renderHTML({ node, HTMLAttributes }) {
-    return ['span', mergeAttributes(HTMLAttributes, { class: 'hashtag' }), `#${node.attrs.hashtag}`]
-  },
-
-  renderText({ node }) {
-    return `#${node.attrs.hashtag}`
-  },
-});
-
 const ResizableImage = Image.extend({
   addAttributes() {
     return {
@@ -194,7 +156,6 @@ export default function PostEditor({ initialTitle = '', initialContent = '', pos
       }),
       CustomLink,
       CustomCodeBlock,
-      Hashtag,
       ResizableImage.configure({
         inline: true,
         allowBase64: true,
@@ -508,7 +469,6 @@ export default function PostEditor({ initialTitle = '', initialContent = '', pos
               <li>• **太字** または __太字__</li>
               <li>• *斜体* または _斜体_</li>
               <li>• ~~打ち消し線~~</li>
-              <li>• #ハッシュタグ でタグ</li>
             </ul>
           </div>
         )}
