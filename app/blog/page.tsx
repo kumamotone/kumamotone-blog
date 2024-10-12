@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from 'next/navigation';
 import { getAllPosts, Post } from "@/lib/posts";
-import { getCurrentUser } from "@/lib/supabase";
+import { getCurrentUser, signOut } from "@/lib/supabase";
 
 export default function BlogList() {
   const [user, setUser] = useState<any>(null);
@@ -25,6 +25,12 @@ export default function BlogList() {
     loadData();
   }, []);
 
+  const handleLogout = async () => {
+    await signOut();
+    setUser(null);
+    router.push('/');
+  };
+
   if (isLoading) {
     return <div>Loading...</div>;
   }
@@ -32,7 +38,17 @@ export default function BlogList() {
   return (
     <div className="container mx-auto px-4 py-8">
       <h1 className="text-3xl font-bold mb-6">ブログ記事一覧</h1>
-      {user && <p>ようこそ、{user.email}さん！</p>}
+      {user && (
+        <div className="mb-4">
+          <p>ようこそ、{user.email}さん！</p>
+          <button
+            onClick={handleLogout}
+            className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600 mt-2"
+          >
+            ログアウト
+          </button>
+        </div>
+      )}
       {user && (
         <Link href="/blog/new" className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 mb-4 inline-block">
           新しい記事を作成
