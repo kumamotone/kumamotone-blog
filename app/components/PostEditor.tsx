@@ -1,6 +1,6 @@
 'use client'
 
-import { createPost, deleteDraft, getDraft, saveDraft } from '@/lib/posts'
+import { createPost, deleteDraft, getDraft, saveDraft, deletePost } from '@/lib/posts'
 import { uploadImage } from '@/lib/supabase'
 import { User } from '@supabase/supabase-js'
 import CodeBlock from '@tiptap/extension-code-block'
@@ -14,7 +14,7 @@ import NextLink from 'next/link'
 import { useRouter } from 'next/navigation'
 import { EditorView } from 'prosemirror-view'
 import React, { useCallback, useEffect, useState } from 'react'
-import { FiEdit, FiHelpCircle, FiList, FiSave, FiSend, FiTrash2 } from 'react-icons/fi'
+import { FiEdit, FiHelpCircle, FiList, FiSave, FiSend, FiTrash2, FiAlertTriangle } from 'react-icons/fi'
 
 const CustomLink = Link.extend({
   inclusive: false,
@@ -159,9 +159,10 @@ interface PostEditorProps {
   postId?: number;
   user: User | null;
   onSubmit?: (title: string, content: string) => Promise<void>;
+  onDelete?: () => Promise<void>;
 }
 
-export default function PostEditor({ initialTitle = '', initialContent = '', postId, user, onSubmit }: PostEditorProps) {
+export default function PostEditor({ initialTitle = '', initialContent = '', postId, user, onSubmit, onDelete }: PostEditorProps) {
   const [title, setTitle] = useState(initialTitle);
   const [content, setContent] = useState(initialContent);
   const [error, setError] = useState('');
@@ -425,6 +426,22 @@ export default function PostEditor({ initialTitle = '', initialContent = '', pos
     return 0
   }, [editor])
 
+  const handleDeletePost = async () => {
+    if (postId && window.confirm('この記事を削除してもよろしいですか？この操作は取り消せません。')) {
+      try {
+        await deletePost(postId);
+        if (onDelete) {
+          await onDelete();
+        } else {
+          router.push('/');
+        }
+      } catch (error) {
+        console.error('記事の削除中にエラーが発生しました:', error);
+        setError('記事の削除中にエラーが発生しました。');
+      }
+    }
+  };
+
   return (
     <div className="container mx-auto px-4 py-8 max-w-4xl">
       <div className="flex justify-between items-center mb-6">
@@ -491,6 +508,16 @@ export default function PostEditor({ initialTitle = '', initialContent = '', pos
                   下書き削除
                 </button>
               </>
+            )}
+            {postId && (
+              <button
+                type="button"
+                onClick={handleDeletePost}
+                className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600 flex items-center"
+              >
+                <FiAlertTriangle className="mr-2" />
+                記事を削除
+              </button>
             )}
             {lastSavedAt && (
               <p className="text-sm text-gray-500 ml-4 flex items-center">
