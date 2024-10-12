@@ -121,7 +121,7 @@ export default function Home() {
         <h1 className="text-4xl font-bold text-green-800 mb-2">
           熊小屋
         </h1>
-        <p className="text-lg text-gray-600 mb-4">I love pure blog.</p>
+        <p className="text-lg text-gray-600 mb-4">I love pure blogs.</p>
         <div className="flex space-x-4 text-sm text-gray-600">
           <a href="https://twitter.com/kumamo_tone" target="_blank" rel="noopener noreferrer" className="flex items-center hover:text-green-600">
             <FiTwitter className="mr-1" />
