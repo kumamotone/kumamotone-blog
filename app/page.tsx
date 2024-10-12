@@ -95,8 +95,8 @@ export default function Home() {
 
   if (isLoading) {
     return (
-      <div className="container mx-auto px-4 py-8 max-w-4xl">
-        <h1 className="text-4xl font-bold mb-8 text-center text-green-800">山蔭の熊小屋</h1>
+      <div>
+        <h1 className="text-4xl font-bold mb-8 text-green-800">山蔭の熊小屋</h1>
         <div className="space-y-8">
           {[...Array(5)].map((_, i) => (
             <LoadingSkeleton key={i} />
@@ -107,90 +107,88 @@ export default function Home() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-100">
-      <div className="container mx-auto px-4 py-8 max-w-4xl">
-        <div className="flex justify-between items-center mb-8">
-          <h1 className="text-4xl font-bold text-green-800">山蔭の熊小屋</h1>
-          {user && (
-            <Link href="/blog/new" className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 transition duration-300">
-              新しい記事を作成
-            </Link>
-          )}
-        </div>
-        {blogPosts.length === 0 ? (
-          <p className="text-center text-gray-600">記事がありません。</p>
-        ) : (
-          <div className="space-y-12">
-            {blogPosts.map((post, index) => (
-              <React.Fragment key={post.id}>
-                <article className="mb-12">
-                  <h2 className="text-2xl font-semibold text-green-700 hover:underline mb-4">
-                    <Link href={`/blog/${post.id}`}>
-                      {post.title}
-                    </Link>
-                  </h2>
-                  <p className="text-gray-500 text-sm mb-4">
-                    {new Date(post.created_at).toLocaleString('ja-JP', {
-                      year: 'numeric',
-                      month: 'long',
-                      day: 'numeric',
-                      hour: '2-digit',
-                      minute: '2-digit'
-                    })}
-                  </p>
-                  <div 
-                    className="text-gray-700 prose prose-green max-w-none"
-                    dangerouslySetInnerHTML={{
-                      __html: DOMPurify.sanitize(post.content, {
-                        ALLOWED_TAGS: ['p', 'strong', 'em', 'u', 's', 'a', 'h1', 'h2', 'h3', 'ul', 'ol', 'li', 'blockquote', 'img', 'pre', 'code'],
-                        ALLOWED_ATTR: ['href', 'target', 'src', 'alt', 'width', 'height', 'class']
-                      })
-                    }}
-                  />
-                  {user && (
-                    <div className="mt-6 flex items-center space-x-4">
-                      <Link href={`/blog/edit/${post.id}`} className="text-green-600 hover:underline">
-                        編集
-                      </Link>
-                      <button
-                        onClick={() => handleTweet(post)}
-                        className="text-blue-500 hover:text-blue-600"
-                      >
-                        X に投稿
-                      </button>
-                    </div>
-                  )}
-                </article>
-                {index < blogPosts.length - 1 && (
-                  <hr className="border-t border-gray-300" />
-                )}
-              </React.Fragment>
-            ))}
-          </div>
+    <div className="pb-12">
+      <div className="flex justify-between items-center mb-8">
+        <h1 className="text-4xl font-bold text-green-800">山蔭の熊小屋</h1>
+        {user && (
+          <Link href="/blog/new" className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 transition duration-300">
+            新しい記事を作成
+          </Link>
         )}
-        <footer className="mt-12 pt-4 border-t border-gray-300">
-          <nav className="flex justify-center items-center space-x-2">
-            {generatePagination(currentPage, totalPages).map((page, index) => (
-              <React.Fragment key={index}>
-                {page === '...' ? (
-                  <span className="px-3 py-2 text-gray-500">...</span>
-                ) : (
-                  <button
-                    onClick={() => handlePageChange(Number(page))}
-                    className={`px-3 py-2 rounded ${
-                      currentPage === page
-                        ? 'bg-green-600 text-white'
-                        : 'bg-white text-green-600 hover:bg-green-100'
-                    }`}
-                  >
-                    {page}
-                  </button>
-                )}
-              </React.Fragment>
-            ))}
-          </nav>
-        </footer>
       </div>
+      {blogPosts.length === 0 ? (
+        <p className="text-gray-600">記事がありません。</p>
+      ) : (
+        <div className="space-y-12">
+          {blogPosts.map((post, index) => (
+            <React.Fragment key={post.id}>
+              <article className="mb-12">
+                <h2 className="text-2xl font-semibold text-green-700 hover:underline mb-4">
+                  <Link href={`/blog/${post.id}`}>
+                    {post.title}
+                  </Link>
+                </h2>
+                <p className="text-gray-500 text-sm mb-4">
+                  {new Date(post.created_at).toLocaleString('ja-JP', {
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit'
+                  })}
+                </p>
+                <div 
+                  className="text-gray-700 prose prose-green max-w-none"
+                  dangerouslySetInnerHTML={{
+                    __html: DOMPurify.sanitize(post.content, {
+                      ALLOWED_TAGS: ['p', 'strong', 'em', 'u', 's', 'a', 'h1', 'h2', 'h3', 'ul', 'ol', 'li', 'blockquote', 'img', 'pre', 'code'],
+                      ALLOWED_ATTR: ['href', 'target', 'src', 'alt', 'width', 'height', 'class']
+                    })
+                  }}
+                />
+                {user && (
+                  <div className="mt-6 flex items-center space-x-4">
+                    <Link href={`/blog/edit/${post.id}`} className="text-green-600 hover:underline">
+                      編集
+                    </Link>
+                    <button
+                      onClick={() => handleTweet(post)}
+                      className="text-blue-500 hover:text-blue-600"
+                    >
+                      X に投稿
+                    </button>
+                  </div>
+                )}
+              </article>
+              {index < blogPosts.length - 1 && (
+                <hr className="border-t border-gray-300" />
+              )}
+            </React.Fragment>
+          ))}
+        </div>
+      )}
+      <footer className="mt-12 pt-4 border-t border-gray-300">
+        <nav className="flex justify-center items-center space-x-2">
+          {generatePagination(currentPage, totalPages).map((page, index) => (
+            <React.Fragment key={index}>
+              {page === '...' ? (
+                <span className="px-3 py-2 text-gray-500">...</span>
+              ) : (
+                <button
+                  onClick={() => handlePageChange(Number(page))}
+                  className={`px-3 py-2 rounded ${
+                    currentPage === page
+                      ? 'bg-green-600 text-white'
+                      : 'bg-white text-green-600 hover:bg-green-100'
+                  }`}
+                >
+                  {page}
+                </button>
+              )}
+            </React.Fragment>
+          ))}
+        </nav>
+      </footer>
     </div>
   );
 }
