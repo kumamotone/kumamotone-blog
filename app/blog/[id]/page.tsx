@@ -4,9 +4,11 @@ import { useState, useEffect } from 'react';
 import Link from "next/link";
 import { useRouter } from 'next/navigation';
 import { getPostById, deletePost, Post } from "@/lib/posts";
+import { getCurrentUser } from "@/lib/supabase";
 
 export default function BlogPost({ params }: { params: { id: string } }) {
   const [post, setPost] = useState<Post | null>(null);
+  const [user, setUser] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isDeleting, setIsDeleting] = useState(false);
   const [showModal, setShowModal] = useState(false);
@@ -14,12 +16,16 @@ export default function BlogPost({ params }: { params: { id: string } }) {
   const id = parseInt(params.id);
 
   useEffect(() => {
-    async function loadPost() {
-      const loadedPost = await getPostById(id);
+    async function loadData() {
+      const [loadedPost, currentUser] = await Promise.all([
+        getPostById(id),
+        getCurrentUser()
+      ]);
       setPost(loadedPost);
+      setUser(currentUser);
       setIsLoading(false);
     }
-    loadPost();
+    loadData();
   }, [id]);
 
   const handleDelete = async () => {
@@ -44,13 +50,20 @@ export default function BlogPost({ params }: { params: { id: string } }) {
       <Link href="/blog" className="text-blue-500 hover:underline">
         記事一覧に戻る
       </Link>
-      <button
-        onClick={() => setShowModal(true)}
-        className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600 mt-4 ml-4"
-        disabled={isDeleting}
-      >
-        {isDeleting ? '削除中...' : '記事を削除'}
-      </button>
+      {user && (
+        <>
+          <Link href={`/blog/edit/${id}`} className="text-blue-500 hover:underline ml-4">
+            編集
+          </Link>
+          <button
+            onClick={() => setShowModal(true)}
+            className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600 mt-4 ml-4"
+            disabled={isDeleting}
+          >
+            {isDeleting ? '削除中...' : '記事を削除'}
+          </button>
+        </>
+      )}
 
       {showModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
