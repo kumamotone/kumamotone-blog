@@ -7,9 +7,17 @@ import { User } from '@supabase/supabase-js'
 import { useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
 
+export interface Post
+{
+  id: number;
+  title: string;
+  content: string;
+  // 他の必要なプロパティがあれば追加してください
+}
+
 export default function EditPost({ params }: { params: { id: string } }) {
   const [user, setUser] = useState<User | null>(null);
-  const [post, setPost] = useState<any>(null);
+  const [post, setPost] = useState<Post | null>(null);
   const router = useRouter();
 
   useEffect(() => {

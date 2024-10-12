@@ -16,6 +16,7 @@ import { EditorView } from 'prosemirror-view'
 import React, { useCallback, useEffect, useState } from 'react'
 import { FiEdit, FiHelpCircle, FiList, FiSave, FiSend, FiTrash2, FiAlertTriangle } from 'react-icons/fi'
 import { toast } from 'react-toastify';
+import { NodeViewProps } from '@tiptap/core'
 
 const CustomLink = Link.extend({
   inclusive: false,
@@ -31,7 +32,7 @@ const CustomLink = Link.extend({
   },
 });
 
-const CustomCodeBlockComponent = ({ node, updateAttributes }: any) => {
+const CustomCodeBlockComponent = ({ node, updateAttributes }: NodeViewProps) => {
   return (
     <NodeViewWrapper className="code-block">
       <select
