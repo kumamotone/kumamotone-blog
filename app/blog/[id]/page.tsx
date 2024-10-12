@@ -7,6 +7,11 @@ import DOMPurify from 'dompurify'
 import Link from "next/link"
 import { useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
+import Prism from 'prismjs';
+import 'prismjs/themes/prism-tomorrow.css'; // または他のテーマ
+import 'prismjs/components/prism-javascript';
+import 'prismjs/components/prism-typescript';
+// 他の必要な言語も同様にインポート
 
 export default function BlogPost({ params }: { params: { id: string } }) {
   const [post, setPost] = useState<Post | null>(null);
@@ -40,6 +45,10 @@ export default function BlogPost({ params }: { params: { id: string } }) {
     loadData();
   }, [id]);
 
+  useEffect(() => {
+    Prism.highlightAll();
+  }, [post]);
+
   const handleDelete = async () => {
     setIsDeleting(true);
     const success = await deletePost(id);
@@ -70,8 +79,8 @@ export default function BlogPost({ params }: { params: { id: string } }) {
         className="mb-8 prose prose-lg max-w-none"
         dangerouslySetInnerHTML={{ 
           __html: DOMPurify.sanitize(post.content, {
-            ALLOWED_TAGS: ['p', 'strong', 'em', 'u', 's', 'a', 'h1', 'h2', 'h3', 'ul', 'ol', 'li', 'blockquote', 'img'],
-            ALLOWED_ATTR: ['href', 'target', 'src', 'alt', 'width', 'height']
+            ALLOWED_TAGS: ['p', 'strong', 'em', 'u', 's', 'a', 'h1', 'h2', 'h3', 'ul', 'ol', 'li', 'blockquote', 'img', 'pre', 'code'],
+            ALLOWED_ATTR: ['href', 'target', 'src', 'alt', 'width', 'height', 'class', 'language-*']
           })
         }}
       />
