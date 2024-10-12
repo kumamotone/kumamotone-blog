@@ -188,19 +188,17 @@ export default function PostEditor({ initialTitle = '', initialContent = '', pos
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault(); // フォームのデフォルト送信を防ぐ
+    e.preventDefault();
     if (user && editor) {
       try {
         setIsSaving(true);
         const newPost = await createPost({
-          title: title, // タイトルステートを使用
+          title: title,
           content: editor.getHTML(),
-          // 他の必要なフィールド
         });
         if (newPost) {
-          // 投稿作成後の処理
-          await deleteDraft(user.id); // 下書きを削除
-          router.push(`/blog/${newPost.id}`); // 新しい投稿ページにリダイレクト
+          await deleteDraft(user.id);
+          router.push('/'); // ホームページにリダイレクト
         }
       } catch (error) {
         console.error('Error creating post:', error);
