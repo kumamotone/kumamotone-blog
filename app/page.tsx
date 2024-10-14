@@ -8,7 +8,7 @@ import hljs from 'highlight.js'
 import 'highlight.js/styles/atom-one-light.css'; // または他の好みのスタイル
 import Link from "next/link"
 import { useRouter, useSearchParams } from "next/navigation"
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useState, useMemo } from 'react'
 import { renderToString } from 'react-dom/server'
 import { FiArrowUp, FiEdit, FiTwitter } from 'react-icons/fi'
 
@@ -53,16 +53,16 @@ export default function Home() {
     window.open(`https://twitter.com/intent/tweet?text=${tweetText}&url=${tweetUrl}`, '_blank');
   };
 
-  const generatePagination = (current: number, total: number) => {
+  const generatePagination = useMemo(() => {
     const delta = 2;
-    const left = current - delta;
-    const right = current + delta + 1;
+    const left = currentPage - delta;
+    const right = currentPage + delta + 1;
     const range = [];
     const rangeWithDots = [];
     let l;
 
-    for (let i = 1; i <= total; i++) {
-      if (i === 1 || i === total || (i >= left && i < right)) {
+    for (let i = 1; i <= totalPages; i++) {
+      if (i === 1 || i === totalPages || (i >= left && i < right)) {
         range.push(i);
       }
     }
@@ -80,7 +80,7 @@ export default function Home() {
     }
 
     return rangeWithDots;
-  };
+  }, [currentPage, totalPages]);
 
   const renderContent = (content: string) => {
     const sanitizedContent = DOMPurify.sanitize(content, {
@@ -190,7 +190,7 @@ export default function Home() {
       )}
       <footer className="mt-12 pt-4 border-t border-gray-300">
         <nav className="flex justify-center items-center space-x-2">
-          {generatePagination(currentPage, totalPages).map((page, index) => (
+          {generatePagination.map((page, index) => (
             <React.Fragment key={index}>
               {page === '...' ? (
                 <span className="px-3 py-2 text-gray-500">...</span>

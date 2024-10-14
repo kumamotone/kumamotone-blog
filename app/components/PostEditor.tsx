@@ -82,7 +82,7 @@ const CustomCodeBlock = CodeBlockLowlight.extend({
   },
 });
 
-const CustomCodeBlockComponent = ({ node, updateAttributes, extension }: NodeViewProps) => {
+const CustomCodeBlockComponent = ({ node, updateAttributes }: NodeViewProps) => {
   return (
     <NodeViewWrapper className="code-block">
       <select
