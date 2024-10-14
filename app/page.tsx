@@ -4,14 +4,13 @@ import { getPaginatedPosts, Post } from "@/lib/posts"
 import { getCurrentUser } from "@/lib/supabase"
 import { User } from "@supabase/supabase-js"
 import DOMPurify from 'dompurify'
+import hljs from 'highlight.js'
+import 'highlight.js/styles/github.css'; // または他の好みのスタイル
 import Link from "next/link"
 import { useRouter, useSearchParams } from "next/navigation"
 import React, { useEffect, useState } from 'react'
-import { FiArrowUp, FiEdit, FiTwitter } from 'react-icons/fi'
-import { common, createLowlight } from 'lowlight'
 import { renderToString } from 'react-dom/server'
-
-const lowlight = createLowlight(common)
+import { FiArrowUp, FiEdit, FiTwitter } from 'react-icons/fi'
 
 export default function Home() {
   const [user, setUser] = useState<User | null>(null);
@@ -97,10 +96,10 @@ export default function Home() {
       if (element instanceof HTMLElement && element.nodeName === 'PRE' && element.firstChild instanceof HTMLElement && element.firstChild.nodeName === 'CODE') {
         const code = element.textContent || '';
         const language = element.firstChild.className.replace('language-', '') || 'plaintext';
-        const highlightedCode = lowlight.highlight(language, code);
+        const highlightedCode = hljs.highlight(code, { language }).value;
         const html = renderToString(
           <pre>
-            <code className={`hljs language-${language}`} dangerouslySetInnerHTML={{ __html: highlightedCode.value }} />
+            <code className={`hljs language-${language}`} dangerouslySetInnerHTML={{ __html: highlightedCode }} />
           </pre>
         );
         return <div key={index} dangerouslySetInnerHTML={{ __html: html }} />;
