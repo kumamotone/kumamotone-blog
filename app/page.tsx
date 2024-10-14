@@ -9,23 +9,9 @@ import { useRouter, useSearchParams } from "next/navigation"
 import React, { useEffect, useState } from 'react'
 import { FiArrowUp, FiEdit, FiTwitter } from 'react-icons/fi'
 
-function LoadingSkeleton() {
-  return (
-    <div className="animate-pulse space-y-4">
-      <div className="h-8 bg-gray-400 rounded w-1/2"></div>
-      <div className="space-y-2">
-        <div className="h-4 bg-gray-400 rounded w-5/6"></div>
-        <div className="h-4 bg-gray-400 rounded w-full"></div>
-        <div className="h-4 bg-gray-400 rounded w-4/6"></div>
-      </div>
-    </div>
-  );
-}
-
 export default function Home() {
   const [user, setUser] = useState<User | null>(null);
-  const [blogPosts, setBlogPosts] = useState<Post[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const [blogPosts, setBlogPosts] = useState<Post[] | null>(null);
   const [totalPosts, setTotalPosts] = useState(0);
   const postsPerPage = 5;
 
@@ -45,8 +31,7 @@ export default function Home() {
         setTotalPosts(total);
       } catch (error) {
         console.error('Error loading data:', error);
-      } finally {
-        setIsLoading(false);
+        setBlogPosts([]);  // エラー時は空の配列をセット
       }
     }
 
@@ -94,17 +79,8 @@ export default function Home() {
     return rangeWithDots;
   };
 
-  if (isLoading) {
-    return (
-      <div>
-        <h1 className="text-4xl font-bold mb-8 text-green-800">熊小屋</h1>
-        <div className="space-y-8">
-          {[...Array(5)].map((_, i) => (
-            <LoadingSkeleton key={i} />
-          ))}
-        </div>
-      </div>
-    );
+  if (blogPosts === null) {
+    return null;  // データ読み込み中は何も表示しない
   }
 
   return (
