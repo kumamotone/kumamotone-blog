@@ -35,7 +35,54 @@ const CustomLink = Link.extend({
   },
 });
 
-const CustomCodeBlockComponent = ({ node, updateAttributes }: NodeViewProps) => {
+const CustomCodeBlock = CodeBlockLowlight.extend({
+  addNodeView() {
+    return ReactNodeViewRenderer(CustomCodeBlockComponent)
+  },
+  addKeyboardShortcuts() {
+    return {
+      'Mod-`': () => this.editor.commands.toggleCodeBlock(),
+      'Enter': ({ editor }) => {
+        const { state } = editor
+        const { selection } = state
+        const { $from, empty } = selection
+
+        if (!empty || $from.parent.type !== this.type) {
+          return false
+        }
+
+        const isAtEnd = $from.parentOffset === $from.parent.nodeSize - 2
+
+        if (isAtEnd) {
+          editor
+            .chain()
+            .insertContentAt(selection.to, { type: 'paragraph' })
+            .focus(selection.to + 1)
+            .run()
+
+          return true
+        }
+
+        return false
+      },
+    }
+  },
+  addAttributes() {
+    return {
+      ...this.parent?.(),
+      class: {
+        default: 'hljs',
+        renderHTML: attributes => {
+          return {
+            class: `hljs ${attributes.class || ''}`,
+          }
+        },
+      },
+    }
+  },
+});
+
+const CustomCodeBlockComponent = ({ node, updateAttributes, extension }: NodeViewProps) => {
   return (
     <NodeViewWrapper className="code-block">
       <select
@@ -72,30 +119,6 @@ const CustomCodeBlockComponent = ({ node, updateAttributes }: NodeViewProps) => 
     </NodeViewWrapper>
   )
 }
-
-const CustomCodeBlock = CodeBlockLowlight.extend({
-  addNodeView() {
-    return ReactNodeViewRenderer(CustomCodeBlockComponent)
-  },
-  addKeyboardShortcuts() {
-    return {
-      'Mod-`': () => this.editor.commands.toggleCodeBlock(),
-    }
-  },
-  addAttributes() {
-    return {
-      ...this.parent?.(),
-      class: {
-        default: 'hljs',
-        renderHTML: attributes => {
-          return {
-            class: `hljs ${attributes.class || ''}`,
-          }
-        },
-      },
-    }
-  },
-});
 
 const ResizableImage = Image.extend({
   addAttributes() {
