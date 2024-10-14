@@ -4,19 +4,22 @@ import { createPost, deleteDraft, deletePost, getDraft, saveDraft } from '@/lib/
 import { uploadImage } from '@/lib/supabase'
 import { User } from '@supabase/supabase-js'
 import { NodeViewProps } from '@tiptap/core'
-import CodeBlock from '@tiptap/extension-code-block'
+import CodeBlockLowlight from '@tiptap/extension-code-block-lowlight'
 import Image from '@tiptap/extension-image'
 import Link from '@tiptap/extension-link'
 import Placeholder from '@tiptap/extension-placeholder'
 import { EditorContent, NodeViewContent, NodeViewWrapper, ReactNodeViewRenderer, useEditor } from '@tiptap/react'
 import StarterKit from '@tiptap/starter-kit'
 import debounce from 'lodash/debounce'
+import { common, createLowlight } from 'lowlight'
 import NextLink from 'next/link'
 import { useRouter } from 'next/navigation'
 import { EditorView } from 'prosemirror-view'
 import React, { useCallback, useEffect, useState } from 'react'
 import { FiAlertTriangle, FiArrowLeft, FiEdit, FiHelpCircle, FiList, FiSave, FiSend, FiTrash2 } from 'react-icons/fi'
 import { toast } from 'react-toastify'
+
+const lowlight = createLowlight(common)
 
 const CustomLink = Link.extend({
   inclusive: false,
@@ -70,13 +73,26 @@ const CustomCodeBlockComponent = ({ node, updateAttributes }: NodeViewProps) => 
   )
 }
 
-const CustomCodeBlock = CodeBlock.extend({
+const CustomCodeBlock = CodeBlockLowlight.extend({
   addNodeView() {
     return ReactNodeViewRenderer(CustomCodeBlockComponent)
   },
   addKeyboardShortcuts() {
     return {
       'Mod-`': () => this.editor.commands.toggleCodeBlock(),
+    }
+  },
+  addAttributes() {
+    return {
+      ...this.parent?.(),
+      class: {
+        default: 'hljs',
+        renderHTML: attributes => {
+          return {
+            class: `hljs ${attributes.class || ''}`,
+          }
+        },
+      },
     }
   },
 });
@@ -200,9 +216,7 @@ export default function PostEditor({ initialTitle = '', initialContent = '', pos
       }),
       CustomLink,
       CustomCodeBlock.configure({
-        HTMLAttributes: {
-          class: 'code-block',
-        },
+        lowlight,
       }),
       ResizableImage.configure({
         inline: true,
@@ -248,12 +262,10 @@ export default function PostEditor({ initialTitle = '', initialContent = '', pos
       },
     },
     onUpdate: ({ editor }) => {
-      const newContent = editor.getHTML();
-      setContent(newContent);
+      const html = editor.getHTML();
+      setContent(html);
       setHasUnsavedChanges(true);
-      debouncedSaveDraft(title, newContent);
-      // 文字数の更新をトリガー
-      getWordCount();
+      debouncedSaveDraft(title, html);
     },
   });
 
@@ -320,7 +332,7 @@ export default function PostEditor({ initialTitle = '', initialContent = '', pos
     };
   }, [hasUnsavedChanges]);
 
-  // タイトル変更ハンドラを更新
+  // タイトル変ハンドラを更新
   const handleTitleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const newTitle = e.target.value;
     setTitle(newTitle);
@@ -432,7 +444,7 @@ export default function PostEditor({ initialTitle = '', initialContent = '', pos
       }
     } catch (error) {
       console.error('画像のアップロードに失敗しました:', error);
-      toast.error(`画像のアップロードに失敗しました: ${error instanceof Error ? error.message : '不明なエラー'}`);
+      toast.error(`画像アップロードに失敗しました: ${error instanceof Error ? error.message : '不明なエラー'}`);
     }
   };
 

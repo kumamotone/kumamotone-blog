@@ -8,6 +8,10 @@ import Link from "next/link"
 import { useRouter, useSearchParams } from "next/navigation"
 import React, { useEffect, useState } from 'react'
 import { FiArrowUp, FiEdit, FiTwitter } from 'react-icons/fi'
+import { common, createLowlight } from 'lowlight'
+import { renderToString } from 'react-dom/server'
+
+const lowlight = createLowlight(common)
 
 export default function Home() {
   const [user, setUser] = useState<User | null>(null);
@@ -79,6 +83,35 @@ export default function Home() {
     return rangeWithDots;
   };
 
+  const renderContent = (content: string) => {
+    const sanitizedContent = DOMPurify.sanitize(content, {
+      ALLOWED_TAGS: ['p', 'strong', 'em', 'u', 's', 'a', 'h1', 'h2', 'h3', 'ul', 'ol', 'li', 'blockquote', 'img', 'pre', 'code'],
+      ALLOWED_ATTR: ['href', 'target', 'src', 'alt', 'width', 'height', 'class']
+    });
+
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(sanitizedContent, 'text/html');
+    const elements = Array.from(doc.body.childNodes);
+
+    return elements.map((element, index) => {
+      if (element instanceof HTMLElement && element.nodeName === 'PRE' && element.firstChild instanceof HTMLElement && element.firstChild.nodeName === 'CODE') {
+        const code = element.textContent || '';
+        const language = element.firstChild.className.replace('language-', '') || 'plaintext';
+        const highlightedCode = lowlight.highlight(language, code);
+        const html = renderToString(
+          <pre>
+            <code className={`hljs language-${language}`} dangerouslySetInnerHTML={{ __html: highlightedCode.value }} />
+          </pre>
+        );
+        return <div key={index} dangerouslySetInnerHTML={{ __html: html }} />;
+      }
+      if (element instanceof HTMLElement) {
+        return <div key={index} dangerouslySetInnerHTML={{ __html: element.outerHTML }} />;
+      }
+      return null;
+    });
+  };
+
   if (blogPosts === null) {
     return null;  // データ読み込み中は何も表示しない
   }
@@ -130,15 +163,9 @@ export default function Home() {
                     minute: '2-digit'
                   })}
                 </p>
-                <div 
-                  className="text-gray-700 prose prose-green max-w-none"
-                  dangerouslySetInnerHTML={{
-                    __html: DOMPurify.sanitize(post.content, {
-                      ALLOWED_TAGS: ['p', 'strong', 'em', 'u', 's', 'a', 'h1', 'h2', 'h3', 'ul', 'ol', 'li', 'blockquote', 'img', 'pre', 'code'],
-                      ALLOWED_ATTR: ['href', 'target', 'src', 'alt', 'width', 'height', 'class']
-                    })
-                  }}
-                />
+                <div className="text-gray-700 prose prose-green max-w-none">
+                  {renderContent(post.content)}
+                </div>
                 {user && (
                   <div className="mt-6 flex items-center space-x-4">
                     <Link href={`/blog/edit/${post.id}`} className="text-green-600 hover:underline flex items-center">
