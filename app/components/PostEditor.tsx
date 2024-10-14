@@ -214,24 +214,6 @@ export default function PostEditor({ initialTitle = '', initialContent = '', pos
   const [showHelp, setShowHelp] = useState(false);
   const router = useRouter();
 
-  // debounceされた自動保存関数を更新
-  const debouncedSaveDraft = debounce(async (title: string, content: string) => {
-    if (user && !postId) {
-      try {
-        await saveDraft({
-          user_id: user.id,
-          title: title,
-          content: content,
-          created_at: new Date().toISOString(),
-        });
-        setLastSavedAt(new Date());
-        setHasUnsavedChanges(false);
-      } catch (error) {
-        console.error('ドラフトの自動保存中にエラーが発生しました:', error);
-      }
-    }
-  }, 100);
-
   const editor = useEditor({
     extensions: [
       StarterKit.configure({
@@ -283,6 +265,15 @@ export default function PostEditor({ initialTitle = '', initialContent = '', pos
         }
         return false;
       },
+      handleKeyDown: (view, event) => {
+        // エディタ内でのキーダウンイベントを処理
+        if ((event.metaKey || event.ctrlKey) && event.key === 'Enter') {
+          event.preventDefault(); // デフォルトの動作を防ぐ
+          handleSubmit(event as unknown as React.FormEvent);
+          return true; // イベントが処理されたことを示す
+        }
+        return false; // 他のキーイベントは通常通り処理
+      },
     },
     onUpdate: ({ editor }) => {
       const html = editor.getHTML();
@@ -291,6 +282,58 @@ export default function PostEditor({ initialTitle = '', initialContent = '', pos
       debouncedSaveDraft(title, html);
     },
   });
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (user && editor) {
+      try {
+        setIsSaving(true);
+        if (onSubmit) {
+          await onSubmit(title, editor.getHTML());
+          // 投稿成功後に下書きをクリア
+          await deleteDraft(user.id);
+          setHasUnsavedChanges(false);
+          localStorage.removeItem('draftTitle');
+          localStorage.removeItem('draftContent');
+        } else {
+          const newPost = await createPost({
+            title: title,
+            content: editor.getHTML(),
+          });
+          if (newPost) {
+            await deleteDraft(user.id);
+            setHasUnsavedChanges(false);
+            localStorage.removeItem('draftTitle');
+            localStorage.removeItem('draftContent');
+            router.push('/');
+          }
+        }
+      } catch (error) {
+        console.error('投稿の作成/更新中にエラーが発生しました:', error);
+        setError('投稿の作成/更新中にエラーが発生しました。');
+      } finally {
+        setIsSaving(false);
+      }
+    }
+  };
+
+  // debounceされた自動保存関数を更新
+  const debouncedSaveDraft = debounce(async (title: string, content: string) => {
+    if (user && !postId) {
+      try {
+        await saveDraft({
+          user_id: user.id,
+          title: title,
+          content: content,
+          created_at: new Date().toISOString(),
+        });
+        setLastSavedAt(new Date());
+        setHasUnsavedChanges(false);
+      } catch (error) {
+        console.error('ドラフトの自動保存中にエラーが発生しました:', error);
+      }
+    }
+  }, 100);
 
   useEffect(() => {
     if (editor && !editor.isDestroyed) {
@@ -401,40 +444,6 @@ export default function PostEditor({ initialTitle = '', initialContent = '', pos
           console.error('下書きの削除中にエラーが発生しました:', error);
           alert('下書きの削除中にエラーが発生しました。');
         }
-      }
-    }
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (user && editor) {
-      try {
-        setIsSaving(true);
-        if (onSubmit) {
-          await onSubmit(title, editor.getHTML());
-          // 投稿成功後に下書きをクリア
-          await deleteDraft(user.id);
-          setHasUnsavedChanges(false);
-          localStorage.removeItem('draftTitle');
-          localStorage.removeItem('draftContent');
-        } else {
-          const newPost = await createPost({
-            title: title,
-            content: editor.getHTML(),
-          });
-          if (newPost) {
-            await deleteDraft(user.id);
-            setHasUnsavedChanges(false);
-            localStorage.removeItem('draftTitle');
-            localStorage.removeItem('draftContent');
-            router.push('/');
-          }
-        }
-      } catch (error) {
-        console.error('投稿の作成/更新中にエラーが発生しました:', error);
-        setError('投稿の作成/更新中にエラーが発生しました。');
-      } finally {
-        setIsSaving(false);
       }
     }
   };
