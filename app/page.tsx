@@ -5,7 +5,7 @@ import { getCurrentUser } from "@/lib/supabase"
 import { User } from "@supabase/supabase-js"
 import DOMPurify from 'dompurify'
 import hljs from 'highlight.js'
-import 'highlight.js/styles/github.css'; // または他の好みのスタイル
+import 'highlight.js/styles/atom-one-light.css'; // または他の好みのスタイル
 import Link from "next/link"
 import { useRouter, useSearchParams } from "next/navigation"
 import React, { useEffect, useState } from 'react'
