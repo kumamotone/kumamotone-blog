@@ -1,59 +1,22 @@
-'use client'
-
-import { getPaginatedPosts, Post } from "@/lib/posts"
+import { renderContent } from '@/app/components/PostContent'
+import { getPaginatedPosts } from "@/lib/posts"
 import { getCurrentUser } from "@/lib/supabase"
-import { User } from "@supabase/supabase-js"
-import DOMPurify from 'dompurify'
-import hljs from 'highlight.js'
-import 'highlight.js/styles/atom-one-light.css'; // または他の好みのスタイル
 import Link from "next/link"
-import { useRouter, useSearchParams } from "next/navigation"
-import React, { useEffect, useState, useMemo } from 'react'
-import { renderToString } from 'react-dom/server'
+import React from 'react'
 import { FiArrowUp, FiEdit, FiTwitter } from 'react-icons/fi'
 
-export default function Home() {
-  const [user, setUser] = useState<User | null>(null);
-  const [blogPosts, setBlogPosts] = useState<Post[] | null>(null);
-  const [totalPosts, setTotalPosts] = useState(0);
+export default async function Home({ searchParams }: { searchParams: { page?: string } }) {
+  const currentPage = Number(searchParams.page) || 1;
   const postsPerPage = 5;
 
-  const router = useRouter();
-  const searchParams = useSearchParams();
-  const currentPage = Number(searchParams?.get('page')) || 1;
+  const [currentUser, { posts, total }] = await Promise.all([
+    getCurrentUser(),
+    getPaginatedPosts(currentPage, postsPerPage)
+  ]);
 
-  useEffect(() => {
-    async function loadData() {
-      try {
-        const [currentUser, { posts, total }] = await Promise.all([
-          getCurrentUser(),
-          getPaginatedPosts(currentPage, postsPerPage)
-        ]);
-        setUser(currentUser);
-        setBlogPosts(posts);
-        setTotalPosts(total);
-      } catch (error) {
-        console.error('Error loading data:', error);
-        setBlogPosts([]);  // エラー時は空の配列をセット
-      }
-    }
+  const totalPages = Math.ceil(total / postsPerPage);
 
-    loadData();
-  }, [currentPage]);
-
-  const totalPages = Math.ceil(totalPosts / postsPerPage);
-
-  const handlePageChange = (newPage: number) => {
-    router.push(`/?page=${newPage}`);
-  };
-
-  const handleTweet = (post: Post) => {
-    const tweetText = encodeURIComponent(`${post.title} | 熊小屋`);
-    const tweetUrl = encodeURIComponent(`${window.location.origin}/blog/${post.id}`);
-    window.open(`https://twitter.com/intent/tweet?text=${tweetText}&url=${tweetUrl}`, '_blank');
-  };
-
-  const generatePagination = useMemo(() => {
+  const generatePagination = () => {
     const delta = 2;
     const left = currentPage - delta;
     const right = currentPage + delta + 1;
@@ -80,44 +43,17 @@ export default function Home() {
     }
 
     return rangeWithDots;
-  }, [currentPage, totalPages]);
-
-  const renderContent = (content: string) => {
-    const sanitizedContent = DOMPurify.sanitize(content, {
-      ALLOWED_TAGS: ['p', 'strong', 'em', 'u', 's', 'a', 'h1', 'h2', 'h3', 'ul', 'ol', 'li', 'blockquote', 'img', 'pre', 'code'],
-      ALLOWED_ATTR: ['href', 'target', 'src', 'alt', 'width', 'height', 'class']
-    });
-
-    const parser = new DOMParser();
-    const doc = parser.parseFromString(sanitizedContent, 'text/html');
-    const elements = Array.from(doc.body.childNodes);
-
-    return elements.map((element, index) => {
-      if (element instanceof HTMLElement && element.nodeName === 'PRE' && element.firstChild instanceof HTMLElement && element.firstChild.nodeName === 'CODE') {
-        const code = element.textContent || '';
-        const language = element.firstChild.className.replace('language-', '') || 'plaintext';
-        const highlightedCode = hljs.highlight(code, { language }).value;
-        const html = renderToString(
-          <pre>
-            <code className={`hljs language-${language}`} dangerouslySetInnerHTML={{ __html: highlightedCode }} />
-          </pre>
-        );
-        return <div key={index} dangerouslySetInnerHTML={{ __html: html }} />;
-      }
-      if (element instanceof HTMLElement) {
-        return <div key={index} dangerouslySetInnerHTML={{ __html: element.outerHTML }} />;
-      }
-      return null;
-    });
   };
 
-  if (blogPosts === null) {
-    return null;  // データ読み込み中は何も表示しない
-  }
+  const handleTweet = (postId: number, title: string) => {
+    const tweetText = encodeURIComponent(`${title} | 熊小屋`);
+    const tweetUrl = encodeURIComponent(`${process.env.NEXT_PUBLIC_BASE_URL}/blog/${postId}`);
+    return `https://twitter.com/intent/tweet?text=${tweetText}&url=${tweetUrl}`;
+  };
 
   return (
     <div className="pb-12 relative">
-      {user && (
+      {currentUser && (
         <div className="absolute top-4 right-4">
           <Link href="/blog/new" className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 transition duration-300 flex items-center">
             <FiEdit className="mr-2" />
@@ -141,11 +77,11 @@ export default function Home() {
           </a>
         </div>
       </div>
-      {blogPosts.length === 0 ? (
+      {posts.length === 0 ? (
         <p className="text-gray-600">記事がありません。</p>
       ) : (
         <div className="space-y-12">
-          {blogPosts.map((post, index) => (
+          {posts.map((post, index) => (
             <React.Fragment key={post.id}>
               <article className="mb-12">
                 <h2 className="text-2xl font-semibold text-green-700 hover:underline mb-4">
@@ -165,23 +101,25 @@ export default function Home() {
                 <div className="text-gray-700 prose prose-green max-w-none">
                   {renderContent(post.content)}
                 </div>
-                {user && (
+                {currentUser && (
                   <div className="mt-6 flex items-center space-x-4">
                     <Link href={`/blog/edit/${post.id}`} className="text-green-600 hover:underline flex items-center">
                       <FiEdit className="mr-2" />
                       編集
                     </Link>
-                    <button
-                      onClick={() => handleTweet(post)}
+                    <a
+                      href={handleTweet(post.id, post.title)}
+                      target="_blank"
+                      rel="noopener noreferrer"
                       className="text-blue-500 hover:text-blue-600 flex items-center"
                     >
                       <FiTwitter className="mr-2" />
                       X に投稿
-                    </button>
+                    </a>
                   </div>
                 )}
               </article>
-              {index < blogPosts.length - 1 && (
+              {index < posts.length - 1 && (
                 <hr className="border-t border-gray-300" />
               )}
             </React.Fragment>
@@ -190,13 +128,13 @@ export default function Home() {
       )}
       <footer className="mt-12 pt-4 border-t border-gray-300">
         <nav className="flex justify-center items-center space-x-2">
-          {generatePagination.map((page, index) => (
+          {generatePagination().map((page, index) => (
             <React.Fragment key={index}>
               {page === '...' ? (
                 <span className="px-3 py-2 text-gray-500">...</span>
               ) : (
-                <button
-                  onClick={() => handlePageChange(Number(page))}
+                <Link
+                  href={`/?page=${page}`}
                   className={`px-3 py-2 rounded ${
                     currentPage === page
                       ? 'bg-green-600 text-white'
@@ -204,7 +142,7 @@ export default function Home() {
                   }`}
                 >
                   {page}
-                </button>
+                </Link>
               )}
             </React.Fragment>
           ))}
