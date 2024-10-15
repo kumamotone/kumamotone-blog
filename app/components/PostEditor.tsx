@@ -366,8 +366,6 @@ export default function PostEditor({ initialTitle = '', initialContent = '', pos
     const handleBeforeUnload = (e: BeforeUnloadEvent) => {
       if (hasUnsavedChanges) {
         e.preventDefault();
-        e.returnValue = '変更が保存されていません。このページを離れてもよろしいですか？';
-        return e.returnValue;
       }
     };
 
@@ -375,26 +373,6 @@ export default function PostEditor({ initialTitle = '', initialContent = '', pos
 
     return () => {
       window.removeEventListener('beforeunload', handleBeforeUnload);
-    };
-  }, [hasUnsavedChanges]);
-
-  useEffect(() => {
-    const handlePopState = (event: PopStateEvent) => {
-      if (hasUnsavedChanges) {
-        const confirmMessage = '変更が保存されていません。このページを離れてもよろしいですか？';
-        if (window.confirm(confirmMessage)) {
-          return;
-        } else {
-          event.preventDefault();
-          window.history.pushState(null, '', window.location.href);
-        }
-      }
-    };
-
-    window.addEventListener('popstate', handlePopState);
-
-    return () => {
-      window.removeEventListener('popstate', handlePopState);
     };
   }, [hasUnsavedChanges]);
 
